@@ -23,17 +23,6 @@ ipcMain.handle("get-sources", async () => {
 
 ipcMain.handle('save-recording', async (_, buffer) => {
 
-  //start-save-recording-normally
-  // const { filePath } = await dialog.showSaveDialog({
-  //     title: "Save Recording",
-  //     defaultPath: path.join(app.getPath("videos"), `recording-${Date.now()}.webm`),
-  //     filters: [{ name: "WebM", extensions: ["webm"] }]
-  // });
-  // END save-recording-normally
-
-
-  // save-recording-automatically-in-systemes-video-folder
-  // const filePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
 
   // implement: when user cancel save the location then only save rec into systems video folder
    // Show Save Dialog
@@ -56,10 +45,4 @@ ipcMain.handle('save-recording', async (_, buffer) => {
 });
 
 
-//   if (filePath) {
-//       fs.writeFileSync(filePath, buffer);
-//       return filePath;
-//   }
-//   return null;
-// });
 
