@@ -7,6 +7,8 @@ let stopTimer; // Timer to automatically stop recording
 let beepInterval;
 let liveCountdownInterval;
 let selectedDuration = 30 * 60 * 1000; // Default to 30 minutes
+const pauseButton = document.getElementById("pause");
+let isPaused = false; // Track pause state
 
 window.onload = () => {
   document.getElementById("stop").disabled = true;
@@ -81,13 +83,6 @@ function playSystemBeep() {
   }
 }
 
-// Get selected recording duration
-
-// document.getElementById('recording-time').addEventListener('change', (event) => {
-//     selectedDuration = parseInt(event.target.value) * 60 * 1000; // Convert minutes to milliseconds
-//     document.getElementById('live-timer').innerText = formatTime(selectedDuration);
-// });
-
 //to support 30 seconds
 document
   .getElementById("recording-time")
@@ -108,6 +103,7 @@ async function startRecording() {
   startButton.disabled = true;
   stopButton.disabled = true;
   videoMessage.innerText = ""; // Clear any previous message
+  pauseButton.disabled = true; // Disable pause initially
 
   // Start Countdown
   countdownDisplay.innerText = `Recording starts in ${countdown}...`;
@@ -161,20 +157,18 @@ async function actualStartRecording() {
     //  const savedPath = await ipcRenderer.invoke('save-recording', buffer);
     //  console.log(`Recording saved at: ${savedPath}`);
 
-    
+    const videoMessage = document.getElementById("video-message");
+    const downloadButton = document.getElementById("download-video");
 
-    const videoMessage = document.getElementById('video-message');
-const downloadButton = document.getElementById('download-video');
+    // Create a new message element for conversion status
+    const conversionStatus = document.createElement("p");
+    conversionStatus.id = "conversion-status";
+    conversionStatus.innerText = "Converting... Please wait";
+    conversionStatus.style.color = "orange";
+    conversionStatus.style.fontWeight = "bold";
 
-// Create a new message element for conversion status
-const conversionStatus = document.createElement('p');
-conversionStatus.id = 'conversion-status';
-conversionStatus.innerText = 'Converting... Please wait';
-conversionStatus.style.color = 'orange';
-conversionStatus.style.fontWeight = 'bold';
-
-// Insert the message before the download button
-downloadButton.before(conversionStatus);
+    // Insert the message before the download button
+    downloadButton.before(conversionStatus);
 
     // Keep your original message
     videoMessage.innerText =
@@ -183,7 +177,6 @@ downloadButton.before(conversionStatus);
 
     // Hide download button durring conversion
     downloadButton.style.display = "none"; // Hide download button
-   
 
     // Wait for MP4 conversion to complete
     const savedPath = await ipcRenderer.invoke("save-recording", buffer);
@@ -194,8 +187,9 @@ downloadButton.before(conversionStatus);
     // Update UI after recording stops
     document.getElementById("stop").disabled = true;
     document.getElementById("start").disabled = false;
-    document.getElementById("countdown").innerText = ""; // Clear the message
+    pauseButton.disabled = true; // Disable pause when stopped
 
+    document.getElementById("countdown").innerText = ""; // Clear the message
 
     document.getElementById("live-timer").innerText = "Time Left: 00:00:00"; // Reset countdown timer UI
 
@@ -203,7 +197,7 @@ downloadButton.before(conversionStatus);
     document.getElementById("video").src = `file://${savedPath}`;
 
     // Remove conversion status message
-conversionStatus.remove();
+    conversionStatus.remove();
 
     // Show download button after conversion is complete
     downloadButton.style.display = "inline-block"; // Show the button
@@ -244,6 +238,7 @@ conversionStatus.remove();
   // Enable stop button and disable start button after recording starts
   document.getElementById("stop").disabled = false;
   document.getElementById("start").disabled = true;
+  pauseButton.disabled = false; // Enable pause after recording starts
 
   // Auto-stop recording after 65 minutes
   stopTimer = setTimeout(() => {
@@ -255,6 +250,19 @@ conversionStatus.remove();
     }
   }, selectedDuration);
 }
+
+// Pause/Resume Button Logic
+pauseButton.addEventListener("click", () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.pause();
+    isPaused = true;
+    pauseButton.innerText = "Resume Recording";
+  } else if (mediaRecorder && mediaRecorder.state === "paused") {
+    mediaRecorder.resume();
+    isPaused = false;
+    pauseButton.innerText = "Pause Recording";
+  }
+});
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {
@@ -284,6 +292,9 @@ document.getElementById("stop").addEventListener("click", () => {
     mediaRecorder.stop();
     document.getElementById("stop").disabled = true;
     document.getElementById("start").disabled = false;
+    pauseButton.disabled = true; // Disable pause after stopping
+    pauseButton.innerText = "Pause Recording"; // Reset button text
+
     document.getElementById("live-timer").innerText = "Time Left: 00:00:00"; // Reset countdown UI
   }
 });
