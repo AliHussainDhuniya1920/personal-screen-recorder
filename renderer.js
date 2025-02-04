@@ -174,6 +174,17 @@ async function actualStartRecording() {
         // Load the MP4 file into the video player
         document.getElementById('video').src = `file://${savedPath}`;
 
+         // Enable Download Button
+    const downloadButton = document.getElementById('download-video');
+    downloadButton.disabled = false;
+    downloadButton.onclick = () => {
+        const link = document.createElement('a');
+        link.href = `file://${savedPath}`;
+        link.download = savedPath.split('/').pop(); // Extract filename from path
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
 
     };
