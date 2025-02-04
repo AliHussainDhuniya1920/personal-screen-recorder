@@ -19,12 +19,30 @@ function playBeepSound() {
 
     beepInterval = setInterval(() => {
         beepAudio.currentTime = 0; // Reset to start
-        beepAudio.play().catch(err => console.error("Error playing sound:", err));
+        beepAudio.play()
+            .then(() => console.log("Playing custom beep sound"))
+            .catch(err => {
+                console.error("Custom beep sound failed, using system beep:", err);
+                playSystemBeep(); // If custom beep fails, fallback to system beep
+            });
     }, 1000);
 
     setTimeout(() => {
         clearInterval(beepInterval);
     }, 3000); // Stop beeping after 3 seconds
+}
+
+// Function to play the default system beep sound
+function playSystemBeep() {
+    const { exec } = require('child_process');
+
+    if (process.platform === "win32") {
+        exec("powershell -c [console]::beep(800, 300)");
+    } else if (process.platform === "darwin") {
+        exec("osascript -e 'beep'");
+    } else if (process.platform === "linux") {
+        exec("echo -e '\\a'"); // Linux default beep
+    }
 }
 
 
