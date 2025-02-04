@@ -8,11 +8,14 @@
   </head>
   <body>
     <h1>Screen Recorder</h1>
-    <button id="start">Start Recording</button>
-    <button id="stop">Stop Recording</button>
-    <p id="countdown"></p>
 
+    <button id="start">Start Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
+    <!-- Stop is disabled initially -->
+    <p id="countdown"></p>
+   </stong><p id="video-message" style="font-weight: bold; color:#f5ca00"> <stong></stong></p>
     <video id="video" controls autoplay></video>
+
     <script src="renderer.js"></script>
   </body>
 </html>
