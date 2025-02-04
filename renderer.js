@@ -7,30 +7,34 @@ let recordedChunks = [];
 let stopTimer; // Timer to automatically stop recording
 let beepInterval;
 let liveCountdownInterval;
+let selectedDuration = 30 * 60 * 1000; // Default to 30 minutes
+
 
 window.onload = () => {
     document.getElementById('stop').disabled = true;
-    document.getElementById('live-timer').innerText = "Screen Recording Duration: Time Left: 00:00:05"; // Initial display
+    document.getElementById('live-timer').innerText = formatTime(selectedDuration);
 };
 
 
 
 // const RECORDING_LIMIT = 30 * 60 * 1000; // 65 minutes in milliseconds
-const RECORDING_LIMIT = 5000; // TESTING in seconds
+// const RECORDING_LIMIT = 5000; // TESTING in seconds
 
 
 // Function to format time in HH:MM:SS
 function formatTime(ms) {
     let totalSeconds = Math.floor(ms / 1000);
-    let hours = Math.floor(totalSeconds / 3600);
+    // let hours = Math.floor(totalSeconds / 60);
     let minutes = Math.floor((totalSeconds % 3600) / 60);
     let seconds = totalSeconds % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return `Time Left:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 // Function to start live countdown timer
 function startLiveCountdown() {
-    let timeRemaining = RECORDING_LIMIT; // Start at 65 minutes
+    // let timeRemaining = RECORDING_LIMIT; // Start at 65 minutes
+
+    let timeRemaining = selectedDuration;
 
     liveCountdownInterval = setInterval(() => {
         timeRemaining -= 1000; // Reduce by 1 second
@@ -38,7 +42,7 @@ function startLiveCountdown() {
 
         if (timeRemaining <= 0) {
             clearInterval(liveCountdownInterval);
-            document.getElementById('live-timer').innerText = "Time Left: 00:00:00";
+            document.getElementById('live-timer').innerText = "Time Left: 00:00";
         }
     }, 1000);
 }
@@ -78,6 +82,11 @@ function playSystemBeep() {
     }
 }
 
+// Get selected recording duration
+document.getElementById('recording-time').addEventListener('change', (event) => {
+    selectedDuration = parseInt(event.target.value) * 60 * 1000; // Convert minutes to milliseconds
+    document.getElementById('live-timer').innerText = formatTime(selectedDuration);
+});
 
 
 async function startRecording() {
@@ -172,7 +181,7 @@ async function actualStartRecording() {
             mediaRecorder.stop();
             // alert('Recording stopped automatically after 65 minutes.');
         }
-    }, RECORDING_LIMIT);
+    }, selectedDuration);
 }
 
 // Function to show a system notification
