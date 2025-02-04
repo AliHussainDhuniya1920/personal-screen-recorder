@@ -6,11 +6,44 @@ let mediaRecorder;
 let recordedChunks = [];
 let stopTimer; // Timer to automatically stop recording
 let beepInterval;
+let liveCountdownInterval;
+
+window.onload = () => {
+    document.getElementById('stop').disabled = true;
+    document.getElementById('live-timer').innerText = "Screen Recording Duration: Time Left: 00:00:05"; // Initial display
+};
 
 
 
-// const RECORDING_LIMIT = 65 * 60 * 1000; // 65 minutes in milliseconds
+// const RECORDING_LIMIT = 30 * 60 * 1000; // 65 minutes in milliseconds
 const RECORDING_LIMIT = 5000; // TESTING in seconds
+
+
+// Function to format time in HH:MM:SS
+function formatTime(ms) {
+    let totalSeconds = Math.floor(ms / 1000);
+    let hours = Math.floor(totalSeconds / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
+    let seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// Function to start live countdown timer
+function startLiveCountdown() {
+    let timeRemaining = RECORDING_LIMIT; // Start at 65 minutes
+
+    liveCountdownInterval = setInterval(() => {
+        timeRemaining -= 1000; // Reduce by 1 second
+        document.getElementById('live-timer').innerText = `Time Left: ${formatTime(timeRemaining)}`;
+
+        if (timeRemaining <= 0) {
+            clearInterval(liveCountdownInterval);
+            document.getElementById('live-timer').innerText = "Time Left: 00:00:00";
+        }
+    }, 1000);
+}
+
+
 
 // Function to play a beep sound for 3 seconds
 function playBeepSound() {
@@ -46,9 +79,6 @@ function playSystemBeep() {
 }
 
 
-window.onload = () => {
-    document.getElementById('stop').disabled = true; // Disable stop button when app loads
-};
 
 async function startRecording() {
     let countdown = 5;
@@ -104,6 +134,7 @@ async function actualStartRecording() {
 
     mediaRecorder.onstop = async () => {
         clearTimeout(stopTimer); // Clear the auto-stop timer when manually stopping
+        clearInterval(liveCountdownInterval); // Stop live countdown timer
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         const buffer = Buffer.from(await blob.arrayBuffer());
@@ -121,10 +152,13 @@ async function actualStartRecording() {
         document.getElementById('start').disabled = false;
         document.getElementById('countdown').innerText = ''; // Clear the message
         document.getElementById('video-message').innerText = 'Oops! If you forget to save your recorded file. No problem 👉Your Video is automatically saved in your system Videos Folder.check it.Thanks';
+        document.getElementById('live-timer').innerText = "Time Left: 00:00:00"; // Reset countdown timer UI
 
     };
 
     mediaRecorder.start();
+    startLiveCountdown(); // Start updating countdown timer
+
 
     // Enable stop button and disable start button after recording starts
     document.getElementById('stop').disabled = false;
@@ -165,9 +199,12 @@ document.getElementById('stop').addEventListener('click', () => {
     if (mediaRecorder) {
         clearTimeout(stopTimer); // Clear the auto-stop timer if manually stopped
         clearInterval(beepInterval); // Prevent beep sound if manually stopped
+        clearInterval(liveCountdownInterval); // Stop the countdown when manually stopped
         mediaRecorder.stop();
         document.getElementById('stop').disabled = true;
         document.getElementById('start').disabled = false;
+        document.getElementById('live-timer').innerText = "Time Left: 00:00:00"; // Reset countdown UI
+
     }
 });
 
