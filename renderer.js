@@ -83,10 +83,18 @@ function playSystemBeep() {
 }
 
 // Get selected recording duration
+
+// document.getElementById('recording-time').addEventListener('change', (event) => {
+//     selectedDuration = parseInt(event.target.value) * 60 * 1000; // Convert minutes to milliseconds
+//     document.getElementById('live-timer').innerText = formatTime(selectedDuration);
+// });
+
+//to support 30 seconds
 document.getElementById('recording-time').addEventListener('change', (event) => {
-    selectedDuration = parseInt(event.target.value) * 60 * 1000; // Convert minutes to milliseconds
+    selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds
     document.getElementById('live-timer').innerText = formatTime(selectedDuration);
 });
+
 
 
 async function startRecording() {
