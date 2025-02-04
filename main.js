@@ -1,4 +1,6 @@
-const { app, BrowserWindow, desktopCapturer, ipcMain } = require("electron");
+const { app, BrowserWindow, desktopCapturer, ipcMain, dialog } = require("electron");
+const fs = require('fs');
+const path = require('path');
 
 let mainWindow;
 
@@ -18,3 +20,46 @@ app.whenReady().then(() => {
 ipcMain.handle("get-sources", async () => {
   return await desktopCapturer.getSources({ types: ["screen", "window"] });
 });
+
+ipcMain.handle('save-recording', async (_, buffer) => {
+
+  //start-save-recording-normally
+  // const { filePath } = await dialog.showSaveDialog({
+  //     title: "Save Recording",
+  //     defaultPath: path.join(app.getPath("videos"), `recording-${Date.now()}.webm`),
+  //     filters: [{ name: "WebM", extensions: ["webm"] }]
+  // });
+  // END save-recording-normally
+
+
+  // save-recording-automatically-in-systemes-video-folder
+  // const filePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
+
+  // implement: when user cancel save the location then only save rec into systems video folder
+   // Show Save Dialog
+   const { filePath } = await dialog.showSaveDialog({
+    title: "Save Recording",
+    defaultPath: path.join(app.getPath("videos"), `recording-${Date.now()}.webm`),
+    filters: [{ name: "WebM", extensions: ["webm"] }]
+});
+
+    // If user selects a location, save there
+    if (filePath) {
+      fs.writeFileSync(filePath, buffer);
+      return filePath;
+  }
+
+  // If the user cancels, save automatically to the Videos folder
+  const autoSavePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
+  fs.writeFileSync(autoSavePath, buffer);
+  return autoSavePath;
+});
+
+
+//   if (filePath) {
+//       fs.writeFileSync(filePath, buffer);
+//       return filePath;
+//   }
+//   return null;
+// });
+
