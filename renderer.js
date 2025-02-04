@@ -171,6 +171,11 @@ async function actualStartRecording() {
         document.getElementById('video-message').innerText = 'Oops! If you forget to save your recorded file. No problem 👉Your Video is automatically saved in your system Videos Folder.check it.Thanks';
         document.getElementById('live-timer').innerText = "Time Left: 00:00:00"; // Reset countdown timer UI
 
+        // Load the MP4 file into the video player
+        document.getElementById('video').src = `file://${savedPath}`;
+
+
+
     };
 
     mediaRecorder.start();
