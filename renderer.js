@@ -4,17 +4,23 @@ const { ipcRenderer } = require('electron');
 
 let mediaRecorder;
 let recordedChunks = [];
-
+window.onload = () => {
+    document.getElementById('stop').disabled = true; // Disable stop button when app loads
+};
 
 async function startRecording() {
     let countdown = 5;
     const startButton = document.getElementById('start');
     const stopButton = document.getElementById('stop');
     const countdownDisplay = document.getElementById('countdown');
+    const videoMessage = document.getElementById('video-message');
+
 
     // Disable start button during countdown
     startButton.disabled = true;
     stopButton.disabled = true;
+    videoMessage.innerText = ''; // Clear any previous message
+
 
     // Start Countdown
     countdownDisplay.innerText = `Recording starts in ${countdown}...`;
@@ -74,6 +80,12 @@ async function actualStartRecording() {
   
           recordedChunks = [];
 
+            // Update UI after recording stops
+        document.getElementById('stop').disabled = true;
+        document.getElementById('start').disabled = false;
+        document.getElementById('countdown').innerText = ''; // Clear the message
+        document.getElementById('video-message').innerText = 'Oops! If you forget to save your recorded file. No problem 👉Your Video is automatically saved in your system Videos Folder.check it.Thanks';
+
         // Save file
         // const a = document.createElement('a');
         // a.href = url;
@@ -86,6 +98,7 @@ async function actualStartRecording() {
     // Enable stop button and disable start button after recording starts
     document.getElementById('stop').disabled = false;
     document.getElementById('start').disabled = true;
+    
 }
 
 document.getElementById('start').addEventListener('click', startRecording);
