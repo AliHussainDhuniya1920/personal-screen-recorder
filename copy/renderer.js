@@ -3,7 +3,6 @@ const path = require("path");
 
 let mediaRecorder;
 let recordedChunks = [];
-let webcamStream;
 let stopTimer; // Timer to automatically stop recording
 let beepInterval;
 let liveCountdownInterval;
@@ -97,11 +96,6 @@ document
   });
 
 async function startRecording() {
-
-ipcRenderer.send("start-webcam");  // Open webcam overlay
-webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 350, height: 350 } });
-
-
   let countdown = 5;
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
@@ -126,10 +120,7 @@ webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 350, 
       actualStartRecording(); // Call actual recording function
     }
   }, 1000);
-
-  
 }
-
 
 async function actualStartRecording() {
   const sources = await ipcRenderer.invoke("get-sources");
@@ -149,8 +140,6 @@ async function actualStartRecording() {
   const combinedStream = new MediaStream([
     ...screenStream.getVideoTracks(),
     ...micStream.getAudioTracks(),
-    ...webcamStream.getVideoTracks(), // ✅ Adds the webcam feed to the recording
-
   ]);
 
   mediaRecorder = new MediaRecorder(combinedStream, {
@@ -160,12 +149,6 @@ async function actualStartRecording() {
   mediaRecorder.ondataavailable = (event) => recordedChunks.push(event.data);
 
   mediaRecorder.onstop = async () => {
-    ipcRenderer.send("stop-webcam"); // ✅ Close webcam when recording stops
-
-    // ✅ Stop webcam stream
-    if (webcamStream) {
-        webcamStream.getTracks().forEach(track => track.stop());
-    }
     clearTimeout(stopTimer); // Clear the auto-stop timer when manually stopping
     clearInterval(liveCountdownInterval); // Stop live countdown timer
     const blob = new Blob(recordedChunks, { type: "video/webm" });
