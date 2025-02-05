@@ -11,15 +11,11 @@ const pauseButton = document.getElementById("pause");
 let isPaused = false; // Track pause state
 let timeRemaining; // Keep track of remaining time
 
-
-
-
 window.onload = () => {
   document.getElementById("stop").disabled = true;
   document.getElementById("live-timer").innerText =
     formatTime(selectedDuration);
 };
-
 
 // Function to format time in HH:MM:SS
 function formatTime(ms) {
@@ -35,25 +31,28 @@ function formatTime(ms) {
 // Function to start live countdown timer
 function startLiveCountdown() {
   if (!timeRemaining) {
-      timeRemaining = selectedDuration; // Initialize only once
+    timeRemaining = selectedDuration; // Initialize only once
   }
 
   liveCountdownInterval = setInterval(() => {
-      if (!isPaused) {
-          timeRemaining -= 1000;
-          document.getElementById('live-timer').innerText = `Time Left: ${formatTime(timeRemaining)}`;
+    if (!isPaused) {
+      timeRemaining -= 1000;
+      document.getElementById(
+        "live-timer"
+      ).innerText = `Time Left: ${formatTime(timeRemaining)}`;
 
-          if (timeRemaining <= 0) {
-              clearInterval(liveCountdownInterval);
-              document.getElementById('live-timer').innerText = "Time Left: 00:00";
-          }
+      if (timeRemaining <= 0) {
+        clearInterval(liveCountdownInterval);
+        document.getElementById("live-timer").innerText = "Time Left: 00:00";
       }
+    }
   }, 1000);
 }
 
-
 // Function to play a beep sound for 3 seconds
 function playBeepSound() {
+    console.log("playBeepSound() was triggered!"); // 🛑 Debugging line
+
   const audioPath = path.join(__dirname, "alert.mp3"); // Ensure this file exists
   const beepAudio = new Audio(audioPath);
 
@@ -126,36 +125,92 @@ async function actualStartRecording() {
   const sources = await ipcRenderer.invoke("get-sources");
 
   const screenStream = await navigator.mediaDevices.getUserMedia({
-    audio: { mandatory: { chromeMediaSource: "desktop" } },
+    // audio: { mandatory: { chromeMediaSource: 'desktop' } },
+    // audio: false,
     video: {
-      mandatory: {
-        chromeMediaSource: "desktop",
-        chromeMediaSourceId: sources[0].id,
-      },
-    },
-  });
+        mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: sources[0].id,
+            maxFrameRate: 60,  // ✅ Smoother recording
+            minFrameRate: 30
+        }
+    }
+});
 
-  const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const micStream = await navigator.mediaDevices.getUserMedia({
+   audio: {
+    echoCancellation: true,  // ✅ Removes feedback/echo
+    noiseSuppression: true,  // ✅ Removes background noise
+    autoGainControl: false   // ❌ Prevents automatic volume spikes
+  }
 
-  const combinedStream = new MediaStream([
-    ...screenStream.getVideoTracks(),
-    ...micStream.getAudioTracks(),
-  ]);
+});
 
+const webcamStream = await navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: false, // 🚀 Make sure webcam audio is disabled
+});
+
+   
+
+    // Get video elements
+    const screenVideo = document.getElementById('screenVideo');
+    const webcamVideo = document.getElementById('webcamVideo');
+
+      // Assign streams to video elements
+      screenVideo.srcObject = screenStream;
+      webcamVideo.srcObject = webcamStream;
+  
+      // Ensure video elements are playing
+      await screenVideo.play();
+      await webcamVideo.play();
+
+// Set up canvas
+const canvas = document.getElementById('overlayCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 1920;  // Set resolution to match screen
+canvas.height = 1080;
+
+    // Function to draw screen + webcam on the canvas
+    function drawFrame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // ✅ Prevent lag
+      ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height); // ✅ Draw screen
+      ctx.drawImage(webcamVideo, canvas.width - 200, 50, 150, 120);  // ✅ Draw webcam
+      requestAnimationFrame(drawFrame);
+    }
+
+  drawFrame(); // Start drawing loop
+
+
+    // Capture the canvas stream as the final recording stream
+    const combinedStream = canvas.captureStream(30); // 30 FPS
+    const audioTracks = [...micStream.getAudioTracks(), ...screenStream.getAudioTracks()];
+    audioTracks.forEach(track => combinedStream.addTrack(track));
+
+
+
+  
   mediaRecorder = new MediaRecorder(combinedStream, {
     mimeType: "video/webm; codecs=vp8,opus",
+    videoBitsPerSecond: 5000000  // ✅ High bitrate for smoother recording
+
   });
 
   mediaRecorder.ondataavailable = (event) => recordedChunks.push(event.data);
 
   mediaRecorder.onstop = async () => {
+    // Stop webcam stream when recording stops
+// Stop webcam when recording stops
+webcamStream.getTracks().forEach(track => track.stop());
+webcamVideo.srcObject = null;
+console.log("Webcam turned off.");
+
     clearTimeout(stopTimer); // Clear the auto-stop timer when manually stopping
     clearInterval(liveCountdownInterval); // Stop live countdown timer
     const blob = new Blob(recordedChunks, { type: "video/webm" });
     const url = URL.createObjectURL(blob);
     const buffer = Buffer.from(await blob.arrayBuffer());
     document.getElementById("video").src = url;
-
 
     const videoMessage = document.getElementById("video-message");
     const downloadButton = document.getElementById("download-video");
@@ -252,20 +307,19 @@ async function actualStartRecording() {
 }
 
 // Pause/Resume Button Logic
-pauseButton.addEventListener('click', () => {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.pause();
-      isPaused = true; // Pause the timer
-      clearInterval(liveCountdownInterval); // Stop the countdown
-      pauseButton.innerText = "Resume Recording";
-  } else if (mediaRecorder && mediaRecorder.state === 'paused') {
-      mediaRecorder.resume();
-      isPaused = false; // Resume the timer
-      startLiveCountdown(); // Restart the countdown from remaining time
-      pauseButton.innerText = "Pause Recording";
+pauseButton.addEventListener("click", () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.pause();
+    isPaused = true; // Pause the timer
+    clearInterval(liveCountdownInterval); // Stop the countdown
+    pauseButton.innerText = "Resume Recording";
+  } else if (mediaRecorder && mediaRecorder.state === "paused") {
+    mediaRecorder.resume();
+    isPaused = false; // Resume the timer
+    startLiveCountdown(); // Restart the countdown from remaining time
+    pauseButton.innerText = "Pause Recording";
   }
 });
-
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {
@@ -301,3 +355,51 @@ document.getElementById("stop").addEventListener("click", () => {
     document.getElementById("live-timer").innerText = "Time Left: 00:00:00"; // Reset countdown UI
   }
 });
+
+// webcam-features-resizable-dynamic
+let webcamStream = null;
+const webcamVideo = document.getElementById("webcam");
+
+// Function to start webcam
+async function startWebcam() {
+  try {
+    webcamStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false, // 🚀 Disable webcam audio completely
+    });
+
+    webcamVideo.srcObject = webcamStream;
+    webcamVideo.muted = true; // 🚀 Mute local webcam playback
+  } catch (error) {
+    console.error("Error accessing webcam:", error);
+  }
+}
+
+// Call function to start webcam when the app loads
+startWebcam();
+
+// Make the webcam draggable
+webcamVideo.onmousedown = function (event) {
+  let shiftX = event.clientX - webcamVideo.getBoundingClientRect().left;
+  let shiftY = event.clientY - webcamVideo.getBoundingClientRect().top;
+
+  function moveAt(pageX, pageY) {
+    webcamVideo.style.left = pageX - shiftX + "px";
+    webcamVideo.style.top = pageY - shiftY + "px";
+  }
+
+  function onMouseMove(event) {
+    moveAt(event.pageX, event.pageY);
+  }
+
+  document.addEventListener("mousemove", onMouseMove);
+
+  webcamVideo.onmouseup = function () {
+    document.removeEventListener("mousemove", onMouseMove);
+    webcamVideo.onmouseup = null;
+  };
+};
+
+webcamVideo.ondragstart = function () {
+  return false;
+};

@@ -12,12 +12,10 @@
     <button id="start">Start Recording</button>
     <button id="pause" disabled>Pause Recording</button>
     <button id="stop" disabled>Stop Recording</button>
-    
 
     <label for="recording-time">Select Recording Duration (Max: 30 min):</label>
-<select id="recording-time">
-    
-    <!-- <option value="1">1 minute</option>
+    <select id="recording-time">
+      <!-- <option value="1">1 minute</option>
     <option value="5">5 minutes</option>
     <option value="10">10 minutes</option>
     <option value="15">15 minutes</option>
@@ -25,24 +23,31 @@
     <option value="25">25 minutes</option>
     <option value="30" selected>30 minutes</option> -->
 
-    <!--  for 30 seconds short -->
-    <option value="1">30seconds</option>
-    <option value="2">1 minutes</option>
-    <option value="10">5 minutes</option>
-    <option value="20">10 minutes</option>
-    <option value="30">15 minutes</option>
-    <option value="40">20 minutes</option>
-    <option value="50">25 minutes</option>
-    <option value="60" selected>30 minutes</option>
-</select>
+      <!--  for 30 seconds short -->
+      <option value="1">30seconds</option>
+      <option value="2">1 minutes</option>
+      <option value="10">5 minutes</option>
+      <option value="20">10 minutes</option>
+      <option value="30">15 minutes</option>
+      <option value="40">20 minutes</option>
+      <option value="50">25 minutes</option>
+      <option value="60" selected>30 minutes</option>
+    </select>
 
-<p id="countdown"></p>
-<p id="live-timer" style="font-size: 20px; font-weight: bold; color: red;">Time Left: 00:30:00</p>
-<p id="video-message" style="font-weight: bold; color: green;"></p>
-<video id="video" controls></video>
-<br>
-<button id="download-video" disabled>Download Video</button>
+    <p id="countdown"></p>
+    <p id="live-timer" style="font-size: 20px; font-weight: bold; color: red">
+      Time Left: 00:30:00
+    </p>
+    <p id="video-message" style="font-weight: bold; color: green"></p>
+    <video id="video" controls></video>
+    <br />
+    <button id="download-video" disabled>Download Video</button>
 
+  
+    <video id="screenVideo" autoplay playsinline style="display: none;"></video>
+    <video id="webcamVideo" autoplay playsinline style="display: none;"></video>
+    <canvas id="overlayCanvas" style="display: none;"></canvas>
+    
 
 
     <script src="renderer.js"></script>
