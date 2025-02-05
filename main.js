@@ -4,6 +4,7 @@ const {
   desktopCapturer,
   ipcMain,
   dialog,
+  screen,
 } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -16,6 +17,7 @@ const ffbinaries = require("ffbinaries");
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
 let mainWindow;
+let webcamWindow;
 
 app.whenReady().then(() => {
   mainWindow = new BrowserWindow({
@@ -27,7 +29,67 @@ app.whenReady().then(() => {
     },
   });
 
+  
   mainWindow.loadFile("index.html");
+  mainWindow.on("closed", () => {
+    closeWebcamWindow(); // ✅ Close webcam when main app closes
+  });
+});
+
+
+// Function to create a floating webcam window
+function createWebcamWindow() {
+  if (webcamWindow) return; // Prevent multiple windows
+
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize; // Get screen size
+
+  webcamWindow = new BrowserWindow({
+    width: 350,
+    height: 350,
+    alwaysOnTop: true,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    skipTaskbar: true,
+    focusable: false,
+    hasShadow: false,
+    x: width - 360,  // ✅ Position near bottom-right corner
+    y: height - 360,  
+    webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+    },
+});
+
+  webcamWindow.loadFile("webcam.html");
+
+  webcamWindow.on("closed", () => {
+    webcamWindow = null; // Ensure window reference is cleared
+  });
+}
+
+// Function to close the webcam window
+function closeWebcamWindow() {
+  if (webcamWindow) {
+    webcamWindow.close();
+    webcamWindow = null;
+  }
+}
+
+// Listen for start and stop events from renderer
+ipcMain.on("start-webcam", () => {
+  createWebcamWindow();
+});
+
+ipcMain.on("stop-webcam", () => {
+  closeWebcamWindow();
+});
+
+// Ensure webcam closes when app is quit
+app.on("window-all-closed", () => {
+  closeWebcamWindow();
+  app.quit();
 });
 
 const { execSync } = require("child_process");
