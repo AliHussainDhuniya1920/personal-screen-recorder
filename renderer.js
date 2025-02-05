@@ -9,6 +9,10 @@ let liveCountdownInterval;
 let selectedDuration = 30 * 60 * 1000; // Default to 30 minutes
 const pauseButton = document.getElementById("pause");
 let isPaused = false; // Track pause state
+let timeRemaining; // Keep track of remaining time
+
+
+
 
 window.onload = () => {
   document.getElementById("stop").disabled = true;
@@ -16,8 +20,6 @@ window.onload = () => {
     formatTime(selectedDuration);
 };
 
-// const RECORDING_LIMIT = 30 * 60 * 1000; // 65 minutes in milliseconds
-// const RECORDING_LIMIT = 5000; // TESTING in seconds
 
 // Function to format time in HH:MM:SS
 function formatTime(ms) {
@@ -32,22 +34,23 @@ function formatTime(ms) {
 
 // Function to start live countdown timer
 function startLiveCountdown() {
-  // let timeRemaining = RECORDING_LIMIT; // Start at 65 minutes
-
-  let timeRemaining = selectedDuration;
+  if (!timeRemaining) {
+      timeRemaining = selectedDuration; // Initialize only once
+  }
 
   liveCountdownInterval = setInterval(() => {
-    timeRemaining -= 1000; // Reduce by 1 second
-    document.getElementById("live-timer").innerText = `Time Left: ${formatTime(
-      timeRemaining
-    )}`;
+      if (!isPaused) {
+          timeRemaining -= 1000;
+          document.getElementById('live-timer').innerText = `Time Left: ${formatTime(timeRemaining)}`;
 
-    if (timeRemaining <= 0) {
-      clearInterval(liveCountdownInterval);
-      document.getElementById("live-timer").innerText = "Time Left: 00:00";
-    }
+          if (timeRemaining <= 0) {
+              clearInterval(liveCountdownInterval);
+              document.getElementById('live-timer').innerText = "Time Left: 00:00";
+          }
+      }
   }, 1000);
 }
+
 
 // Function to play a beep sound for 3 seconds
 function playBeepSound() {
@@ -153,9 +156,6 @@ async function actualStartRecording() {
     const buffer = Buffer.from(await blob.arrayBuffer());
     document.getElementById("video").src = url;
 
-    // Attempt to manually save, or auto-save if canceled
-    //  const savedPath = await ipcRenderer.invoke('save-recording', buffer);
-    //  console.log(`Recording saved at: ${savedPath}`);
 
     const videoMessage = document.getElementById("video-message");
     const downloadButton = document.getElementById("download-video");
@@ -252,17 +252,20 @@ async function actualStartRecording() {
 }
 
 // Pause/Resume Button Logic
-pauseButton.addEventListener("click", () => {
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.pause();
-    isPaused = true;
-    pauseButton.innerText = "Resume Recording";
-  } else if (mediaRecorder && mediaRecorder.state === "paused") {
-    mediaRecorder.resume();
-    isPaused = false;
-    pauseButton.innerText = "Pause Recording";
+pauseButton.addEventListener('click', () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.pause();
+      isPaused = true; // Pause the timer
+      clearInterval(liveCountdownInterval); // Stop the countdown
+      pauseButton.innerText = "Resume Recording";
+  } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+      mediaRecorder.resume();
+      isPaused = false; // Resume the timer
+      startLiveCountdown(); // Restart the countdown from remaining time
+      pauseButton.innerText = "Pause Recording";
   }
 });
+
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {
