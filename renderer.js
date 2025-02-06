@@ -1,6 +1,8 @@
 const { ipcRenderer } = require("electron");
 const path = require("path");
 
+
+
 let mediaRecorder;
 let recordedChunks = [];
 let webcamStream;
@@ -11,6 +13,7 @@ let selectedDuration = 30 * 60 * 1000; // Default to 30 minutes
 const pauseButton = document.getElementById("pause");
 let isPaused = false; // Track pause state
 let timeRemaining; // Keep track of remaining time
+
 
 window.onload = () => {
   document.getElementById("stop").disabled = true;

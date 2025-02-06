@@ -1,18 +1,54 @@
 {
-  "name": "electron-screen-rec",
+  "name": "screen-recorder",
   "version": "1.0.0",
+  "description": "Screen recording app",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder",
+    "build": "electron-builder"
+
+  },
+  "build": {
+    "appId": "com.alihussaindhuniya.screenrecorder",
+    "productName": "Screen Recorder by Ali Hussain Dhuniya",
+    "copyright": "© 2025 Ali Hussain Dhuniya",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "dist/**/*", 
+      "renderer.js",
+      "index.html",
+      "assets/**",
+      "ffmpeg/**",
+      "alert.mp3",
+      "style.css",
+      "webcam.html"
+     
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "electron": "^34.0.2",
-    "electron-builder": "^25.1.8",
     "electron-dialog": "^2.0.0",
     "electron-reload": "^2.0.0-alpha.1",
     "ffbinaries": "^1.1.6",
@@ -23,5 +59,9 @@
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "unzipper": "^0.12.3"
+  },
+  "devDependencies": {
+    "electron": "^34.0.2",
+    "electron-builder": "^25.1.8"
   }
 }
