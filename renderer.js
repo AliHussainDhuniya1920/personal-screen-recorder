@@ -439,3 +439,70 @@ toggleMicButton.addEventListener("click", () => {
         toggleMicButton.innerText = isMicEnabled ? "Disable Microphone" : "Enable Microphone";
     }
 });
+
+
+// shortcut keys
+ipcRenderer.on("start-recording", () => {
+    console.log("🎥 Start Recording Triggered from Shortcut");
+    startRecording();
+});
+
+ipcRenderer.on("stop-recording", () => {
+    console.log("🛑 Stop Recording Triggered from Shortcut");
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+    }
+});
+
+
+
+ipcRenderer.on("toggle-webcam", () => {
+    console.log("📷 Toggle Webcam Triggered from Shortcut");
+    const toggleWebcamButton = document.getElementById("toggle-webcam");
+    toggleWebcamButton.click(); // ✅ Simulate button click
+});
+
+
+// keep below code commented because by mistake if we press shortcut key then it will pause the recording without knowing  so do it manually
+// document.addEventListener("DOMContentLoaded", () => {
+  
+//   ipcRenderer.on("pause", () => {
+//     console.log("⏸️ Pause/Resume Recording Triggered from Shortcut");
+//     console.log("mediaRecorder:", mediaRecorder); // Debugging
+//     if (mediaRecorder) {
+//       if (mediaRecorder.state === "recording") {
+//         mediaRecorder.pause();
+//         console.log("⏸️ Recording Paused");
+//       } else if (mediaRecorder.state === "paused") {
+//         mediaRecorder.resume();
+//         console.log("▶️ Recording Resumed");
+//       }
+//     } else {
+//       console.error("⚠️ mediaRecorder is undefined");
+//     }
+//   });
+
+
+  // keep below code disable: mic because if we press accidently shortcut key then it will disable the mic so do it manually
+  
+//   let micStream = null; // Declare globally
+//   navigator.mediaDevices.getUserMedia({ audio: true })
+//     .then(stream => {
+//         micStream = stream; // Assign micStream properly
+//     })
+//     .catch(err => console.error("⚠️ Error accessing microphone:", err));
+//   ipcRenderer.on("toggle-mic", () => {
+//     console.log("🎤 Toggle Microphone Triggered from Shortcut");
+//     console.log("micStream:", micStream); // Debugging
+//     if (micStream) {
+//       micStream.getAudioTracks().forEach(track => {
+//         track.enabled = !track.enabled;
+//         console.log(`🎤 Microphone ${track.enabled ? "Enabled" : "Disabled"}`);
+//       });
+//     } else {
+//       console.error("⚠️ micStream is undefined");
+//     }
+//   });
+  
+// });
+

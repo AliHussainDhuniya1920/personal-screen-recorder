@@ -5,6 +5,7 @@ const {
   ipcMain,
   dialog,
   screen,
+  globalShortcut
 } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -20,6 +21,31 @@ let mainWindow;
 let webcamWindow;
 
 app.whenReady().then(() => {
+     // ✅ Register Global Shortcuts
+ globalShortcut.register("CommandOrControl+Shift+S", () => {
+  console.log("🎥 Start Recording Shortcut Pressed");
+  mainWindow.webContents.send("start-recording");
+});
+
+globalShortcut.register("CommandOrControl+Shift+X", () => {
+  console.log("🛑 Stop Recording Shortcut Pressed");
+  mainWindow.webContents.send("stop-recording");
+});
+
+
+
+globalShortcut.register("CommandOrControl+Shift+W", () => {
+  console.log("📷 Toggle Webcam Shortcut Pressed");
+  mainWindow.webContents.send("toggle-webcam");
+});
+
+
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll(); // ✅ Unregister shortcuts on app quit
+});
+
+
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -29,12 +55,17 @@ app.whenReady().then(() => {
     },
   });
 
+
+
   
   mainWindow.loadFile("index.html");
   mainWindow.on("closed", () => {
     closeWebcamWindow(); // ✅ Close webcam when main app closes
   });
 });
+
+
+
 
 
 // Function to create a floating webcam window
@@ -116,6 +147,7 @@ function getAvailableEncoders() {
 }
 
 const { downloadBinariesSync } = require("ffbinaries");
+const { log } = require("console");
 
 const ffmpegDir = path.join(__dirname, "ffmpeg");
 const ffmpegExePath = path.join(ffmpegDir, "bin", "ffmpeg.exe"); // FFmpeg binary path
@@ -220,7 +252,7 @@ async function convertWebMToMP4(filePath) {
       .outputOptions([
         `-c:v ${encoder}`, // Use the best available encoder
         "-preset ultrafast", // Max speed
-        "-crf 19", // Adjust quality (lower number = better quality)
+        "-crf 17", // Adjust quality (lower number = better quality)
         "-tune zerolatency", // Skip extra processing
         "-threads 4", // Use all CPU cores
         "-movflags +faststart", // Optimize MP4 playback
