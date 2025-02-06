@@ -12,15 +12,20 @@ const pauseButton = document.getElementById("pause");
 let isPaused = false; // Track pause state
 let timeRemaining; // Keep track of remaining time
 
-
-
-
 window.onload = () => {
   document.getElementById("stop").disabled = true;
   document.getElementById("live-timer").innerText =
     formatTime(selectedDuration);
-};
 
+  // ✅ Create an audio object on page load to ensure it works later
+  const testAudio = new Audio();
+  testAudio.muted = true;
+  testAudio
+    .play()
+    .catch(() =>
+      console.log("🔇 Audio autoplay blocked, waiting for user interaction.")
+    );
+};
 
 // Function to format time in HH:MM:SS
 function formatTime(ms) {
@@ -35,44 +40,78 @@ function formatTime(ms) {
 
 // Function to start live countdown timer
 function startLiveCountdown() {
-  if (!timeRemaining) {
-      timeRemaining = selectedDuration; // Initialize only once
+  console.log("⏳ Timer started. Remaining Time:", timeRemaining);
+
+  if (!timeRemaining || timeRemaining <= 0) {
+    timeRemaining = selectedDuration; // ✅ Reset timeRemaining if not set
   }
 
-  liveCountdownInterval = setInterval(() => {
-      if (!isPaused) {
-          timeRemaining -= 1000;
-          document.getElementById('live-timer').innerText = `Time Left: ${formatTime(timeRemaining)}`;
+  clearInterval(liveCountdownInterval); // ✅ Clear previous countdown to avoid conflicts
 
-          if (timeRemaining <= 0) {
-              clearInterval(liveCountdownInterval);
-              document.getElementById('live-timer').innerText = "Time Left: 00:00";
-          }
+  liveCountdownInterval = setInterval(() => {
+    if (!isPaused) {
+      timeRemaining -= 1000;
+      document.getElementById(
+        "live-timer"
+      ).innerText = `Time Left: ${formatTime(timeRemaining)}`;
+      console.log("⏳ Timer running. Remaining Time:", timeRemaining);
+    }
+
+      if (timeRemaining <= 0) {
+        clearInterval(liveCountdownInterval);
+        document.getElementById("live-timer").innerText = "Time Left: 00:00";
+
+        console.log("🛑 Timer reached 00:00. Stopping recording...");
+
+     
+
+       // ✅ Stop recording immediately without waiting 1 extra second
+       if (mediaRecorder && mediaRecorder.state === "recording") {
+        console.log("🎥 Stopping MediaRecorder...");
+        mediaRecorder.stop();
       }
+       // ✅ Then, play the alert sound AFTER stopping the recording
+       setTimeout(() => {
+        playBeepSound(); // ✅ Alert sound is now separate and won't interfere with timer
+      }, 500);
+    }
   }, 1000);
 }
 
 
 // Function to play a beep sound for 3 seconds
 function playBeepSound() {
-  const audioPath = path.join(__dirname, "alert.mp3"); // Ensure this file exists
+  console.log("🔊 Playing alert sound...");
+
+  const audioPath = path.join(__dirname, "alert.mp3");
   const beepAudio = new Audio(audioPath);
+  let beepCount = 0; // Counter to stop after 3 beeps
 
   beepInterval = setInterval(() => {
+    if (beepCount >= 3) { 
+      clearInterval(beepInterval); // ✅ Stop after 3 beeps
+      console.log("✅ Beep sound stopped after 3 seconds.");
+      return;
+    }
+
     beepAudio.currentTime = 0; // Reset to start
     beepAudio
       .play()
-      .then(() => console.log("Playing custom beep sound"))
+      .then(() => console.log(`🔊 Playing custom beep sound (${beepCount + 1}/3)`))
       .catch((err) => {
-        console.error("Custom beep sound failed, using system beep:", err);
-        playSystemBeep(); // If custom beep fails, fallback to system beep
+        console.error("❌ Custom beep sound failed, using system beep:", err);
+        playSystemBeep(); // ✅ If custom beep fails, fallback to system beep
       });
-  }, 1000);
 
-  setTimeout(() => {
-    clearInterval(beepInterval);
-  }, 3000); // Stop beeping after 3 seconds
+    beepCount++; // Increment beep count
+  }, 1000);
 }
+
+
+  // setTimeout(() => {
+  //   clearInterval(beepInterval);
+  // }, 3000); // Stop beeping after 3 seconds
+
 
 // Function to play the default system beep sound
 function playSystemBeep() {
@@ -97,16 +136,30 @@ document
   });
 
 async function startRecording() {
-
-ipcRenderer.send("start-webcam");  // Open webcam overlay
-webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 350, height: 350 } });
-
+  ipcRenderer.send("start-webcam"); // Open webcam overlay
+  webcamStream = await navigator.mediaDevices.getUserMedia({
+    video: { width: 200, height: 200 },
+  });
 
   let countdown = 5;
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const countdownDisplay = document.getElementById("countdown");
   const videoMessage = document.getElementById("video-message");
+
+  // ✅ Stop any previous recording (if still running)
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    console.log("Previous recording stopped before starting a new one.");
+  }
+
+  // ✅ Reset timeRemaining when starting a new recording
+  timeRemaining = selectedDuration;
+  document.getElementById("live-timer").innerText = formatTime(timeRemaining);
+
+  // ✅ Stop old timers if they exist
+  clearTimeout(stopTimer);
+  clearInterval(liveCountdownInterval);
 
   // Disable start button during countdown
   startButton.disabled = true;
@@ -126,10 +179,7 @@ webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 350, 
       actualStartRecording(); // Call actual recording function
     }
   }, 1000);
-
-  
 }
-
 
 async function actualStartRecording() {
   const sources = await ipcRenderer.invoke("get-sources");
@@ -150,7 +200,6 @@ async function actualStartRecording() {
     ...screenStream.getVideoTracks(),
     ...micStream.getAudioTracks(),
     ...webcamStream.getVideoTracks(), // ✅ Adds the webcam feed to the recording
-
   ]);
 
   mediaRecorder = new MediaRecorder(combinedStream, {
@@ -164,7 +213,7 @@ async function actualStartRecording() {
 
     // ✅ Stop webcam stream
     if (webcamStream) {
-        webcamStream.getTracks().forEach(track => track.stop());
+      webcamStream.getTracks().forEach((track) => track.stop());
     }
     clearTimeout(stopTimer); // Clear the auto-stop timer when manually stopping
     clearInterval(liveCountdownInterval); // Stop live countdown timer
@@ -172,7 +221,6 @@ async function actualStartRecording() {
     const url = URL.createObjectURL(blob);
     const buffer = Buffer.from(await blob.arrayBuffer());
     document.getElementById("video").src = url;
-
 
     const videoMessage = document.getElementById("video-message");
     const downloadButton = document.getElementById("download-video");
@@ -269,20 +317,36 @@ async function actualStartRecording() {
 }
 
 // Pause/Resume Button Logic
-pauseButton.addEventListener('click', () => {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.pause();
-      isPaused = true; // Pause the timer
-      clearInterval(liveCountdownInterval); // Stop the countdown
-      pauseButton.innerText = "Resume Recording";
-  } else if (mediaRecorder && mediaRecorder.state === 'paused') {
-      mediaRecorder.resume();
-      isPaused = false; // Resume the timer
-      startLiveCountdown(); // Restart the countdown from remaining time
-      pauseButton.innerText = "Pause Recording";
+pauseButton.addEventListener("click", () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.pause();
+    isPaused = true; // Pause the timer
+    clearInterval(liveCountdownInterval); // Stop the countdown
+    // ✅ Stop webcam stream when pausing
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => (track.enabled = false));
+    }
+
+    console.log("⏸ Recording paused. Remaining Time:", timeRemaining);
+    pauseButton.innerText = "Resume Recording";
+  } else if (mediaRecorder && mediaRecorder.state === "paused") {
+    mediaRecorder.resume();
+    isPaused = false; // Resume the timer
+
+    // ✅ Resume webcam when unpausing
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(track => track.enabled = true);
+    }
+
+
+    console.log(
+      "▶️ Recording resumed. Restarting timer with remaining time:",
+      timeRemaining
+    );
+    startLiveCountdown(); // Restart the countdown from remaining time
+    pauseButton.innerText = "Pause Recording";
   }
 });
-
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {
