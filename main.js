@@ -42,10 +42,18 @@ function createWebcamWindow() {
   if (webcamWindow) return; // Prevent multiple windows
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize; // Get screen size
+  const taskbarHeight = screen.getPrimaryDisplay().size.height - height; // Detect taskbar height
+
+  const overlaySize = 250 // Webcam overlay size
+  const xPos = width - overlaySize - 5; // Right-aligned
+  const yPos = height - overlaySize - taskbarHeight + 145; // Positioned over system time
+
 
   webcamWindow = new BrowserWindow({
-    width: 200,
-    height: 200,
+    width: overlaySize,
+    height: overlaySize,
+    x: xPos,
+    y: yPos,
     alwaysOnTop: true,
     frame: false,
     transparent: true,
@@ -54,14 +62,15 @@ function createWebcamWindow() {
     skipTaskbar: true,
     focusable: false,
     hasShadow: false,
-    x: width - 250,  // ✅ Position near bottom-right corner
-    y: height - 250,  
     webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
+      nodeIntegration: true,
+      contextIsolation: false,
     },
-});
+  });
 
+   // ✅ Ensure it stays above the taskbar
+   webcamWindow.setAlwaysOnTop(true, "screen-saver");
+  webcamWindow.setIgnoreMouseEvents(true, { forward: true }); // Allow clicks through window
   webcamWindow.loadFile("webcam.html");
 
   webcamWindow.on("closed", () => {
