@@ -398,3 +398,18 @@ toggleWebcamButton.addEventListener("click", () => {
   isWebcamEnabled = !isWebcamEnabled; // Toggle state
 });
 
+// mic default on:
+
+const toggleMicButton = document.getElementById("toggle-mic");
+let isMicEnabled = true; // Default: Enabled
+
+toggleMicButton.addEventListener("click", () => {
+    if (mediaRecorder) {
+        mediaRecorder.stream.getAudioTracks().forEach(track => {
+            track.enabled = !track.enabled; // Toggle mic
+        });
+
+        isMicEnabled = !isMicEnabled;
+        toggleMicButton.innerText = isMicEnabled ? "Disable Microphone" : "Enable Microphone";
+    }
+});
