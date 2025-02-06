@@ -385,18 +385,44 @@ document.getElementById("stop").addEventListener("click", () => {
 
 // toogle webcam for on/off default is off
 const toggleWebcamButton = document.getElementById("toggle-webcam");
-let isWebcamEnabled = false; // Default: Disabled
+let isWebcamEnabled = true; // ✅ Default: Enabled
+
+
+// Set initial button text
+toggleWebcamButton.innerText = "Disable Webcam";
+
 
 toggleWebcamButton.addEventListener("click", () => {
   if (isWebcamEnabled) {
-    ipcRenderer.send("stop-webcam");
+    stopWebcam(); // ✅ Stop webcam and release camera
     toggleWebcamButton.innerText = "Enable Webcam";
   } else {
-    ipcRenderer.send("start-webcam");
+    startWebcam(); // ✅ Restart webcam
     toggleWebcamButton.innerText = "Disable Webcam";
   }
   isWebcamEnabled = !isWebcamEnabled; // Toggle state
 });
+
+// ✅ Function to Start Webcam
+function startWebcam() {
+  ipcRenderer.send("start-webcam");
+  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+    webcamStream = stream; // Store webcam stream
+  }).catch((error) => {
+    console.error("❌ Failed to start webcam:", error);
+  });
+}
+
+// ✅ Function to Stop Webcam Properly
+function stopWebcam() {
+  ipcRenderer.send("stop-webcam");
+
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop()); // ✅ Turn off webcam
+    webcamStream = null; // Clear stream reference
+  }
+}
+
 
 // mic default on:
 
