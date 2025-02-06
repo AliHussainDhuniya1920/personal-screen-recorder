@@ -382,3 +382,19 @@ document.getElementById("stop").addEventListener("click", () => {
     document.getElementById("live-timer").innerText = "Time Left: 00:00:00"; // Reset countdown UI
   }
 });
+
+// toogle webcam for on/off default is off
+const toggleWebcamButton = document.getElementById("toggle-webcam");
+let isWebcamEnabled = false; // Default: Disabled
+
+toggleWebcamButton.addEventListener("click", () => {
+  if (isWebcamEnabled) {
+    ipcRenderer.send("stop-webcam");
+    toggleWebcamButton.innerText = "Enable Webcam";
+  } else {
+    ipcRenderer.send("start-webcam");
+    toggleWebcamButton.innerText = "Disable Webcam";
+  }
+  isWebcamEnabled = !isWebcamEnabled; // Toggle state
+});
+
