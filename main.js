@@ -20,6 +20,9 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 let mainWindow;
 let webcamWindow;
 
+
+
+
 app.whenReady().then(() => {
      // ✅ Register Global Shortcuts
  globalShortcut.register("CommandOrControl+Shift+S", () => {
@@ -50,9 +53,11 @@ app.on("will-quit", () => {
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: true, // Allow require() in renderer process
+      contextIsolation: false, // Ensure proper IPC communication
+      enableRemoteModule: true, // Needed if using remote module
     },
+  
   });
 
 
