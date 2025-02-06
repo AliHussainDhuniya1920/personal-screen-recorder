@@ -44,8 +44,8 @@ function createWebcamWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize; // Get screen size
 
   webcamWindow = new BrowserWindow({
-    width: 350,
-    height: 350,
+    width: 200,
+    height: 200,
     alwaysOnTop: true,
     frame: false,
     transparent: true,
@@ -54,8 +54,8 @@ function createWebcamWindow() {
     skipTaskbar: true,
     focusable: false,
     hasShadow: false,
-    x: width - 360,  // ✅ Position near bottom-right corner
-    y: height - 360,  
+    x: width - 250,  // ✅ Position near bottom-right corner
+    y: height - 250,  
     webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -121,7 +121,6 @@ function isFFmpegAvailable() {
 }
 
 // Function to move ffmpeg.exe into the bin folder after download
-// Function to move ffmpeg.exe into the bin folder after download
 function moveFFmpegToBin() {
   const downloadedPath = path.join(ffmpegDir, "ffmpeg.exe"); // Where ffbinaries places ffmpeg.exe
 
@@ -140,7 +139,6 @@ function moveFFmpegToBin() {
 }
 
 // Function to download FFmpeg from the internet
-// Function to download FFmpeg using `ffbinaries`
 function downloadFFmpeg() {
   return new Promise((resolve, reject) => {
     console.log("Downloading FFmpeg...");
