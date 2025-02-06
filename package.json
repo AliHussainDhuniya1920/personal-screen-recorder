@@ -17,6 +17,7 @@
       "output": "dist"
     },
     "files": [
+      "node_modules/ffmpeg-static/**/*",
       "main.js",
       "preload.js",
       "dist/**/*", 
