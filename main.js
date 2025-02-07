@@ -10,12 +10,15 @@ const {
 const fs = require("fs");
 const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
-const ffmpegStatic = require("ffmpeg-static");
+// const ffmpegStatic = require("ffmpeg-static");
 const unzipper = require("unzipper");
 const https = require("https");
 const ffbinaries = require("ffbinaries");
 
-ffmpeg.setFfmpegPath(ffmpegStatic);
+
+
+
+
 
 let mainWindow;
 let webcamWindow;
@@ -137,11 +140,42 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
+
+// const ffmpeg = require("ffmpeg-static"); // Import ffmpeg-static
 const { execSync } = require("child_process");
+
+// const ffmpegPath = ffmpegStatic ? path.resolve(ffmpegStatic) : null;
+// console.log("✅ 150 line FFmpeg Path:", ffmpegPath);
+// ffmpeg.setFfmpegPath(ffmpegPath);
+// ffmpeg.setFfmpegPath(ffmpegStatic);
+// console.log("✅ FFmpeg Path:", ffmpegPath);
+
+// console.log("🚀code-153 ffmpeg-static module resolution path:", require.resolve("ffmpeg-static"));
+
+
+const ffmpegPath = require.resolve("ffmpeg-static"); // Use this instead of ffmpegStatic.path
+// console.log("✅ 155- FFmpeg Path:", ffmpegPath);
+
+const ffmpegStatic = require("ffmpeg-static");
+
+
+
+
+// console.log("🔹 158 - ffmpegStatic:", ffmpegStatic); // Check what it prints
+// console.log("🔹 159- ffmpegStatic.path:", ffmpegStatic?.path); // Should NOT be undefined
+// console.log("🔹 160- require.resolve('ffmpeg-static'):", require.resolve('ffmpeg-static')); // Should return a valid path
+
+
+process.env.NODE_OPTIONS = "--no-warnings";
+
 
 function getAvailableEncoders() {
   try {
-    const output = execSync(`${ffmpegPath} -hide_banner -encoders`).toString();
+    // console.log("🔹 wala-FFmpeg Path:", ffmpegPath); // Log the actual path
+    // console.log("🔹 Running command:", `${ffmpegPath} -hide_banner -encoders`);
+
+
+    const output = execSync(`"${ffmpegPath}" -hide_banner -encoders`, { encoding: "utf8" });
     if (output.includes("h264_nvenc")) return "h264_nvenc"; // NVIDIA
     if (output.includes("h264_qsv")) return "h264_qsv"; // Intel Quick Sync
     if (output.includes("h264_amf")) return "h264_amf"; // AMD AMF

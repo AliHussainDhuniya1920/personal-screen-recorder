@@ -1,13 +1,12 @@
 {
-  "name": "screen-recorder",
+  "name": "electron-screen-rec",
   "version": "1.0.0",
   "description": "Screen recording app",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron . --disable-dev-shm-usage",
     "dist": "electron-builder",
     "build": "electron-builder"
-
   },
   "build": {
     "appId": "com.alihussaindhuniya.screenrecorder",
@@ -20,7 +19,7 @@
       "node_modules/ffmpeg-static/**/*",
       "main.js",
       "preload.js",
-      "dist/**/*", 
+      "dist/**/*",
       "renderer.js",
       "index.html",
       "assets/**",
@@ -28,7 +27,6 @@
       "alert.mp3",
       "style.css",
       "webcam.html"
-     
     ],
     "extraMetadata": {
       "main": "main.js"
@@ -64,5 +62,9 @@
   "devDependencies": {
     "electron": "^34.0.2",
     "electron-builder": "^25.1.8"
+  },
+  "packageManager": "yarn@4.6.0",
+  "volta": {
+    "node": "22.13.1"
   }
 }
