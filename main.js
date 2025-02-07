@@ -148,6 +148,18 @@ function getAvailableEncoders() {
   // ✅ Define ffmpegPath before using it
 const ffmpegPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
 
+(async () => {
+  
+  // Dynamically import 'electron-is-dev'
+  const isDev = (await import("electron-is-dev")).default;
+
+  const ffmpegPath = isDev
+    ? path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe")
+    : path.join(process.resourcesPath, "ffmpeg", "bin", "ffmpeg.exe");
+
+  console.log("🚀 Using FFmpeg Path:", ffmpegPath);
+})();
+
 // ✅ Set the FFmpeg path correctly
 ffmpeg.setFfmpegPath(ffmpegPath);
 
@@ -161,21 +173,29 @@ ffmpeg.setFfprobePath(ffprobePath);
 console.log("✅183- FFmpeg Path Set:", ffmpegPath);
 console.log("✅ 184- FFprobe Path Set:", ffprobePath);
 
-  const { execSync } = require("child_process");
+  // const { execSync } = require("child_process");
+  (async () => {
+    const { execSync } = await import("child_process");
+    
+    try {
+      const result = execSync("echo Hello World").toString();
+      console.log("Command Output:", result);
+    } catch (error) {
+      console.error("Command Error:", error);
+    }
+  })();
+  
 
   try {
-    // console.log("🔹 wala-FFmpeg Path:", ffmpegPath); // Log the actual path
-    // console.log("🔹 Running command:", `${ffmpegPath} -hide_banner -encoders`);
+  
 
 
     const output = execSync(`"${ffmpegPath}" -hide_banner -encoders`).toString(); // ✅ Use correct FFmpeg path
-    if (output.includes("h264_nvenc")) return "h264_nvenc"; // NVIDIA
-    if (output.includes("h264_qsv")) return "h264_qsv"; // Intel Quick Sync
-    if (output.includes("h264_amf")) return "h264_amf"; // AMD AMF
+    if (output.includes("libx264")) return "libx264"; // default cpu
   } catch (error) {
     console.log("Error detecting encoders:", error);
   }
-  return "libx264"; // Default CPU fallback
+  return "no-cpu-type"; // Default CPU fallback
 }
 
 const { downloadBinariesSync } = require("ffbinaries");
@@ -286,21 +306,16 @@ async function extractFFmpeg() {
   console.log("FFmpeg path set successfully:", ffmpegExePath);
 })();
 
+
 async function convertWebMToMP4(filePath) {
   return new Promise((resolve, reject) => {
-    let outputFilePath = filePath.replace(".webm", ".mp4");
 
-    // 🔹 Ensure output file path is valid
-    outputFilePath = outputFilePath.replace(/\\/g, "/"); // Normalize for FFmpeg
-    // const encoder = getAvailableEncoders(); // Detect best encoder
-
-
-    console.log(`🚀 Starting Conversion: ${filePath} ➡️ ${outputFilePath}`);
-
+    const outputFilePath = filePath.replace(".webm", ".mp4");
+ 
     ffmpeg(filePath)
       .output(outputFilePath)
       .outputOptions([
-        // `-c:v ${encoder}`, // Use the best available encoder
+        // `-c:v ${encoder}`,
         "-c:v libx264",
         "-preset ultrafast",
         "-crf 17",
@@ -310,7 +325,7 @@ async function convertWebMToMP4(filePath) {
       ])
       .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
       .on("error", (err) => {
-        console.error("❌ FFmpeg Error:", err);
+        console.error("❌ FFmpeg Conversion Error:", err);
         reject(err);
       })
       .on("end", () => {
@@ -320,6 +335,8 @@ async function convertWebMToMP4(filePath) {
       .run();
   });
 }
+
+
 
 
 
