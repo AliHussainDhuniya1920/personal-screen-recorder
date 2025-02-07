@@ -1,0 +1,9 @@
+#webcamVideo {
+    position: absolute;
+    width: 150px;
+    height: 100px;
+    border: 2px solid black;
+    resize: both;
+    overflow: hidden;
+    cursor: grab;
+}
