@@ -55,6 +55,7 @@
   "license": "ISC",
   "dependencies": {
     "electron-dialog": "^2.0.0",
+    "electron-is-dev": "^3.0.1",
     "electron-reload": "^2.0.0-alpha.1",
     "ffbinaries": "^1.1.6",
     "ffmpeg": "^0.0.4",

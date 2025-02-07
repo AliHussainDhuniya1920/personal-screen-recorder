@@ -1312,6 +1312,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"electron-is-dev@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "electron-is-dev@npm:3.0.1"
+  checksum: 10c0/80d37d61d44b8b7af0af90eab622b09e0f165afbc2560297c760356efa93fcb54dbbd13d4d6522da6474e261d630b76b804c86385564a1f3062d28fc59c340bd
+  languageName: node
+  linkType: hard
+
 "electron-publish@npm:25.1.7":
   version: 25.1.7
   resolution: "electron-publish@npm:25.1.7"
@@ -1343,6 +1350,7 @@ __metadata:
     electron: "npm:^34.0.2"
     electron-builder: "npm:^25.1.8"
     electron-dialog: "npm:^2.0.0"
+    electron-is-dev: "npm:^3.0.1"
     electron-reload: "npm:^2.0.0-alpha.1"
     ffbinaries: "npm:^1.1.6"
     ffmpeg: "npm:^0.0.4"

@@ -143,33 +143,6 @@ app.on("window-all-closed", () => {
 });
 
 
-// const ffmpeg = require("ffmpeg-static"); // Import ffmpeg-static
-
-
-// const ffmpegPath = ffmpegStatic ? path.resolve(ffmpegStatic) : null;
-// console.log("✅ 150 line FFmpeg Path:", ffmpegPath);
-// ffmpeg.setFfmpegPath(ffmpegPath);
-// ffmpeg.setFfmpegPath(ffmpegStatic);
-// console.log("✅ FFmpeg Path:", ffmpegPath);
-
-// console.log("🚀code-153 ffmpeg-static module resolution path:", require.resolve("ffmpeg-static"));
-
-
-
-
-// const ffmpegStatic = require("ffmpeg-static");
-
-
-
-
-// console.log("🔹 158 - ffmpegStatic:", ffmpegStatic); // Check what it prints
-// console.log("🔹 159- ffmpegStatic.path:", ffmpegStatic?.path); // Should NOT be undefined
-// console.log("🔹 160- require.resolve('ffmpeg-static'):", require.resolve('ffmpeg-static')); // Should return a valid path
-
-
-
-
-
 
 function getAvailableEncoders() {
   // ✅ Define ffmpegPath before using it
@@ -180,14 +153,6 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 console.log("✅ FFmpeg Path Set:", ffmpegPath);
 
-
-  // Manually set FFmpeg path
-// const ffmpegPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
-// ffmpeg.setFfmpegPath(ffmpegPath);
-
-// console.log("✅ 160- manually FFmpeg Path Set:", ffmpegPath);
-  // Ensure the correct FFmpeg binary path
-// const ffmpegPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
 const ffprobePath = path.join(__dirname, "ffmpeg", "bin", "ffprobe.exe");
 
 // ffmpeg.setFfmpegPath(ffmpegPath);
@@ -327,12 +292,15 @@ async function convertWebMToMP4(filePath) {
 
     // 🔹 Ensure output file path is valid
     outputFilePath = outputFilePath.replace(/\\/g, "/"); // Normalize for FFmpeg
+    // const encoder = getAvailableEncoders(); // Detect best encoder
+
 
     console.log(`🚀 Starting Conversion: ${filePath} ➡️ ${outputFilePath}`);
 
     ffmpeg(filePath)
       .output(outputFilePath)
       .outputOptions([
+        // `-c:v ${encoder}`, // Use the best available encoder
         "-c:v libx264",
         "-preset ultrafast",
         "-crf 17",
@@ -354,37 +322,6 @@ async function convertWebMToMP4(filePath) {
 }
 
 
-// Function to convert WebM to MP4
-// async function convertWebMToMP4(filePath) {
-//   if (!fs.existsSync(filePath)) {
-//     console.error("🚨 Error: WebM file does not exist!", filePath);
-//     return reject("WebM file not found.");
-//   }
-//   return new Promise((resolve, reject) => {
-//     const outputFilePath = filePath.replace(".webm", ".mp4");
-//     const encoder = getAvailableEncoders(); // Detect best encoder
-
-//     ffmpeg(filePath)
-//       .output(outputFilePath)
-//       .outputOptions([
-//         `-c:v ${encoder}`, // Use the best available encoder
-//         "-preset ultrafast", // Max speed
-//         "-crf 17", // Adjust quality (lower number = better quality)
-//         "-tune zerolatency", // Skip extra processing
-//         "-threads 4", // Use all CPU cores
-//         "-movflags +faststart", // Optimize MP4 playback
-//       ])
-//       .on("end", () => {
-//         console.log("Converted WebM to MP4:", outputFilePath);
-//         resolve(outputFilePath);
-//       })
-//       .on("error", (err) => {
-//         console.error("Error converting WebM to MP4:", err);
-//         reject(err);
-//       })
-//       .run();
-//   });
-// }
 
 ipcMain.handle("get-sources", async () => {
   return await desktopCapturer.getSources({ types: ["screen", "window"] });
