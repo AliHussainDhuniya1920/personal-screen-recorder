@@ -663,7 +663,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bluebird@npm:^3.5.5, bluebird@npm:~3.7.2":
+"bluebird@npm:^3.5.5":
   version: 3.7.2
   resolution: "bluebird@npm:3.7.2"
   checksum: 10c0/680de03adc54ff925eaa6c7bb9a47a0690e8b5de60f4792604aae8ed618c65e6b63a7893b57ca924beaf53eee69c5af4f8314148c08124c550fe1df1add897d2
@@ -1247,15 +1247,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"duplexer2@npm:~0.1.4":
-  version: 0.1.4
-  resolution: "duplexer2@npm:0.1.4"
-  dependencies:
-    readable-stream: "npm:^2.0.2"
-  checksum: 10c0/0765a4cc6fe6d9615d43cc6dbccff6f8412811d89a6f6aa44828ca9422a0a469625ce023bf81cee68f52930dbedf9c5716056ff264ac886612702d134b5e39b4
-  languageName: node
-  linkType: hard
-
 "eastasianwidth@npm:^0.2.0":
   version: 0.2.0
   resolution: "eastasianwidth@npm:0.2.0"
@@ -1284,7 +1275,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-builder@npm:^25.1.8":
+"electron-builder@npm:25.1.8":
   version: 25.1.8
   resolution: "electron-builder@npm:25.1.8"
   dependencies:
@@ -1305,17 +1296,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-dialog@npm:^2.0.0":
+"electron-dialog@npm:2.0.0":
   version: 2.0.0
   resolution: "electron-dialog@npm:2.0.0"
   checksum: 10c0/349ae303455fcc3c0ff81de5a1739bb96f0f78044fe65e17cefac7e046f35bbb9251c4b06ed5484ae9fb1cd3bc28a0b422b50d5a44bcbe627211a78336663776
-  languageName: node
-  linkType: hard
-
-"electron-is-dev@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "electron-is-dev@npm:3.0.1"
-  checksum: 10c0/80d37d61d44b8b7af0af90eab622b09e0f165afbc2560297c760356efa93fcb54dbbd13d4d6522da6474e261d630b76b804c86385564a1f3062d28fc59c340bd
   languageName: node
   linkType: hard
 
@@ -1334,7 +1318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-reload@npm:^2.0.0-alpha.1":
+"electron-reload@npm:2.0.0-alpha.1":
   version: 2.0.0-alpha.1
   resolution: "electron-reload@npm:2.0.0-alpha.1"
   dependencies:
@@ -1347,31 +1331,27 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "electron-screen-rec@workspace:."
   dependencies:
-    electron: "npm:^34.0.2"
-    electron-builder: "npm:^25.1.8"
-    electron-dialog: "npm:^2.0.0"
-    electron-is-dev: "npm:^3.0.1"
-    electron-reload: "npm:^2.0.0-alpha.1"
-    ffbinaries: "npm:^1.1.6"
-    ffmpeg: "npm:^0.0.4"
-    fluent-ffmpeg: "npm:^2.1.3"
-    fs: "npm:^0.0.1-security"
-    http: "npm:^0.0.1-security"
-    https: "npm:^1.0.0"
-    unzipper: "npm:^0.12.3"
+    electron: "npm:34.0.2"
+    electron-builder: "npm:25.1.8"
+    electron-dialog: "npm:2.0.0"
+    electron-reload: "npm:2.0.0-alpha.1"
+    ffbinaries: "npm:1.1.6"
+    ffmpeg: "npm:0.0.4"
+    fluent-ffmpeg: "npm:2.1.3"
+    fs: "npm:0.0.1-security"
   languageName: unknown
   linkType: soft
 
-"electron@npm:^34.0.2":
-  version: 34.1.0
-  resolution: "electron@npm:34.1.0"
+"electron@npm:34.0.2":
+  version: 34.0.2
+  resolution: "electron@npm:34.0.2"
   dependencies:
     "@electron/get": "npm:^2.0.0"
     "@types/node": "npm:^20.9.0"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/399167132fd8b2153ee95e97cb9f48963f4ddca249418453af0b65b99580bfc069d547ebea1ec0990c9a81b4ec5446ce162cd1b7d2eb5c178d42d723670991e9
+  checksum: 10c0/c1708b7a01a1490fb9162823a95b4ebdcae237c624c4f9836fc9cb6bde063a650422f2219eb56a38ca1e8e50f0d178961c2224879cf0dc334f9e9891e85e817d
   languageName: node
   linkType: hard
 
@@ -1538,7 +1518,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ffbinaries@npm:^1.1.6":
+"ffbinaries@npm:1.1.6":
   version: 1.1.6
   resolution: "ffbinaries@npm:1.1.6"
   dependencies:
@@ -1554,7 +1534,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ffmpeg@npm:^0.0.4":
+"ffmpeg@npm:0.0.4":
   version: 0.0.4
   resolution: "ffmpeg@npm:0.0.4"
   dependencies:
@@ -1581,7 +1561,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fluent-ffmpeg@npm:^2.1.3":
+"fluent-ffmpeg@npm:2.1.3":
   version: 2.1.3
   resolution: "fluent-ffmpeg@npm:2.1.3"
   dependencies:
@@ -1641,7 +1621,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^11.1.1, fs-extra@npm:^11.2.0":
+"fs-extra@npm:^11.1.1":
   version: 11.3.0
   resolution: "fs-extra@npm:11.3.0"
   dependencies:
@@ -1700,7 +1680,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs@npm:^0.0.1-security":
+"fs@npm:0.0.1-security":
   version: 0.0.1-security
   resolution: "fs@npm:0.0.1-security"
   checksum: 10c0/e0c0b585ec6f7483d63d067215d9d6bb2e0dba5912060d32554c8e566a0e22ee65e4c2a2b0567476efbbfb47682554b4711d69cab49950d01f227a3dfa7d671a
@@ -1869,7 +1849,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.2, graceful-fs@npm:^4.2.6":
+"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10c0/386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
@@ -1974,13 +1954,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http@npm:^0.0.1-security":
-  version: 0.0.1-security
-  resolution: "http@npm:0.0.1-security"
-  checksum: 10c0/c0354c2afb6027a80756a30b1fb06607608c0408d100a5e3610d762dd1a320cb2611b0c3cf5ccb969b80f839e2735237ecc9897841e936d098161c38ee153ee5
-  languageName: node
-  linkType: hard
-
 "https-proxy-agent@npm:^5.0.0":
   version: 5.0.1
   resolution: "https-proxy-agent@npm:5.0.1"
@@ -1998,13 +1971,6 @@ __metadata:
     agent-base: "npm:^7.1.2"
     debug: "npm:4"
   checksum: 10c0/f729219bc735edb621fa30e6e84e60ee5d00802b8247aac0d7b79b0bd6d4b3294737a337b93b86a0bd9e68099d031858a39260c976dc14cdbba238ba1f8779ac
-  languageName: node
-  linkType: hard
-
-"https@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "https@npm:1.0.0"
-  checksum: 10c0/e36eb4c38f09264bb273925b2d658c38bb8dda655cdff679b75dc45ccac26b1520fadcf00be677ccc4432a62f44a408b522f66cfc802ce30f4effe75decfd554
   languageName: node
   linkType: hard
 
@@ -2784,13 +2750,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-int64@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "node-int64@npm:0.4.0"
-  checksum: 10c0/a6a4d8369e2f2720e9c645255ffde909c0fbd41c92ea92a5607fc17055955daac99c1ff589d421eee12a0d24e99f7bfc2aabfeb1a4c14742f6c099a51863f31a
-  languageName: node
-  linkType: hard
-
 "nopt@npm:^6.0.0":
   version: 6.0.0
   resolution: "nopt@npm:6.0.0"
@@ -3079,7 +3038,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^2.0.2, readable-stream@npm:^2.2.2":
+"readable-stream@npm:^2.2.2":
   version: 2.3.8
   resolution: "readable-stream@npm:2.3.8"
   dependencies:
@@ -3733,19 +3692,6 @@ __metadata:
   version: 2.0.1
   resolution: "universalify@npm:2.0.1"
   checksum: 10c0/73e8ee3809041ca8b818efb141801a1004e3fc0002727f1531f4de613ea281b494a40909596dae4a042a4fb6cd385af5d4db2e137b1362e0e91384b828effd3a
-  languageName: node
-  linkType: hard
-
-"unzipper@npm:^0.12.3":
-  version: 0.12.3
-  resolution: "unzipper@npm:0.12.3"
-  dependencies:
-    bluebird: "npm:~3.7.2"
-    duplexer2: "npm:~0.1.4"
-    fs-extra: "npm:^11.2.0"
-    graceful-fs: "npm:^4.2.2"
-    node-int64: "npm:^0.4.0"
-  checksum: 10c0/4cae2ad23bfd47011d5f8a6d61fb1dc0e4b5008bc3896e6f3d5ab946a64e9482714992a988128bce541440aa646e16e5e5c9bf35e49097edbaf833e7f814d36d
   languageName: node
   linkType: hard
 

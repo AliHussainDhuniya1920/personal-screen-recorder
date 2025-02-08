@@ -2,9 +2,9 @@ const ffmpeg = require("fluent-ffmpeg"); // ✅ Ensure this is at the top
 const path = require("path");
 const fs = require("fs");
 const {
+  desktopCapturer,
   app,
   BrowserWindow,
-  desktopCapturer,
   ipcMain,
   dialog,
   screen,
@@ -12,20 +12,12 @@ const {
 } = require("electron");
 
 
-// const ffmpegStatic = require("ffmpeg-static");
-const unzipper = require("unzipper");
-const https = require("https");
-const ffbinaries = require("ffbinaries");
-
-
-
-
-
-
 let mainWindow;
 let webcamWindow;
 
-
+ipcMain.handle("get-sources", async () => {
+  return await desktopCapturer.getSources({ types: ["screen", "window"] });
+});
 
 
 app.whenReady().then(() => {
@@ -144,243 +136,126 @@ app.on("window-all-closed", () => {
 
 
 
-function getAvailableEncoders() {
-  // ✅ Define ffmpegPath before using it
-const ffmpegPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
 
-(async () => {
-  
-  // Dynamically import 'electron-is-dev'
-  const isDev = (await import("electron-is-dev")).default;
-
-  const ffmpegPath = isDev
-    ? path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe")
-    : path.join(process.resourcesPath, "ffmpeg", "bin", "ffmpeg.exe");
-
-  console.log("🚀 Using FFmpeg Path:", ffmpegPath);
-})();
-
-// ✅ Set the FFmpeg path correctly
-ffmpeg.setFfmpegPath(ffmpegPath);
-
-console.log("✅ FFmpeg Path Set:", ffmpegPath);
-
-const ffprobePath = path.join(__dirname, "ffmpeg", "bin", "ffprobe.exe");
-
-// ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
-
-console.log("✅183- FFmpeg Path Set:", ffmpegPath);
-console.log("✅ 184- FFprobe Path Set:", ffprobePath);
-
-  // const { execSync } = require("child_process");
-  (async () => {
-    const { execSync } = await import("child_process");
-    
-    try {
-      const result = execSync("echo Hello World").toString();
-      console.log("Command Output:", result);
-    } catch (error) {
-      console.error("Command Error:", error);
-    }
-  })();
-  
-
-  try {
-  
-
-
-    const output = execSync(`"${ffmpegPath}" -hide_banner -encoders`).toString(); // ✅ Use correct FFmpeg path
-    if (output.includes("libx264")) return "libx264"; // default cpu
-  } catch (error) {
-    console.log("Error detecting encoders:", error);
-  }
-  return "no-cpu-type"; // Default CPU fallback
-}
-
-const { downloadBinariesSync } = require("ffbinaries");
-const { log } = require("console");
-// const ffmpeg = require("ffmpeg");
-
-const ffmpegDir = path.join(__dirname, "ffmpeg");
-const ffmpegExePath = path.join(ffmpegDir, "bin", "ffmpeg.exe"); // FFmpeg binary path
-const ffmpegZipPath = path.join(ffmpegDir, "ffmpeg.zip"); // FFmpeg ZIP file path
-const binDir = path.join(ffmpegDir, "bin"); // ✅ Define binDir before using it
-const ffmpegDownloadURL =
-  "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"; // Official FFmpeg download URL
 
 const { execSync } = require("child_process");
-  function checkFFmpegEncoders() {
-    try {
-      const encoders = execSync(`"${ffmpegExePath}" -hide_banner -encoders`).toString();
-      console.log(encoders);
-    } catch (error) {
-      console.error("🚨 FFmpeg encoder test failed:", error);
-    }
-  }
-  
-  checkFFmpegEncoders();
 
-// Function to check if FFmpeg exists
+
+
+let ffmpegPath = "ffmpeg"; // Assume it's in the system PATH
+
+try {
+  // ✅ Find the full system path of FFmpeg
+  const detectedFFmpegPath = execSync("where ffmpeg").toString().trim(); // Windows (for Mac/Linux use `which ffmpeg`)
+  ffmpegPath = detectedFFmpegPath.split("\n")[0]; // Get first path in case multiple are listed
+
+  console.log("🚀 FFmpeg Found at:", ffmpegPath);
+} catch (error) {
+  console.error("❌ FFmpeg Not Found in System PATH. Please install FFmpeg.");
+}
+
+// ✅ Set FFmpeg Path for Fluent-FFmpeg
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+
+// ✅ Function to check if FFmpeg is available
 function isFFmpegAvailable() {
-  return fs.existsSync(ffmpegExePath);
-}
-
-// Function to move ffmpeg.exe into the bin folder after download
-function moveFFmpegToBin() {
-  const downloadedPath = path.join(ffmpegDir, "ffmpeg.exe"); // Where ffbinaries places ffmpeg.exe
-
-  if (fs.existsSync(downloadedPath)) {
-    if (!fs.existsSync(binDir)) {
-      fs.mkdirSync(binDir, { recursive: true }); // ✅ Ensure bin folder exists
-    }
-
-    fs.renameSync(downloadedPath, ffmpegExePath); // ✅ Move ffmpeg.exe into bin/
-    console.log("Moved FFmpeg to bin folder successfully!");
-  } else {
-    console.error(
-      "FFmpeg download failed: ffmpeg.exe not found in expected location."
-    );
+  try {
+    execSync(`${ffmpegPath} -version`, { stdio: "ignore" });
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
-// Function to download FFmpeg from the internet
-function downloadFFmpeg() {
-  return new Promise((resolve, reject) => {
-    console.log("Downloading FFmpeg...");
-
-    ffbinaries.downloadBinaries(
-      ["ffmpeg"],
-      { destination: ffmpegDir },
-      (err, results) => {
-        if (err) {
-          console.error("Failed to download FFmpeg:", err);
-          reject(err);
-        } else {
-          console.log("FFmpeg downloaded successfully!", results);
-          moveFFmpegToBin(); // Move ffmpeg.exe after download
-          resolve();
-        }
-      }
-    );
-  });
+// ✅ Function to get available encoders
+function getAvailableEncoders() {
+  try {
+    const output = execSync(`${ffmpegPath} -hide_banner -encoders`).toString();
+    if (output.includes("h264_nvenc")) return "h264_nvenc"; // NVIDIA
+    if (output.includes("h264_qsv")) return "h264_qsv"; // Intel Quick Sync
+    if (output.includes("h264_amf")) return "h264_amf"; // AMD AMF
+  } catch (error) {
+    console.error("Error detecting encoders:", error);
+  }
+  return "libx264"; // Default CPU fallback
 }
 
-// Function to extract FFmpeg ZIP if missing
-async function extractFFmpeg() {
-  if (fs.existsSync(ffmpegZipPath)) {
-    console.log("Extracting FFmpeg...");
-    return fs
-      .createReadStream(ffmpegZipPath)
-      .pipe(unzipper.Extract({ path: ffmpegDir }))
-      .promise()
-      .then(() => {
-        moveFFmpegToBin(); // ✅ Move extracted ffmpeg.exe to bin/
-        console.log("FFmpeg extracted successfully!");
-      })
-      .catch((err) => console.error("Error extracting FFmpeg:", err));
-  }
-}
-
-// Ensure FFmpeg is available
-(async () => {
-  if (!isFFmpegAvailable()) {
-    console.log("FFmpeg not found, trying to download...");
-
-    try {
-      await downloadFFmpeg(); // Try downloading FFmpeg
-    } catch (error) {
-      console.log("No internet or download failed, checking local ZIP...");
-      if (fs.existsSync(ffmpegZipPath)) {
-        console.log("Using local FFmpeg ZIP...");
-        await extractFFmpeg();
-      } else {
-        console.log("No internet and no local ZIP found. FFmpeg setup failed.");
-      }
-    }
-  }
-
-  // **✅ Fix: Set the Correct FFmpeg Path**
-  ffmpeg.setFfmpegPath(ffmpegExePath);
-
-  console.log("FFmpeg path set successfully:", ffmpegExePath);
-})();
-
-
+// ✅ Function to convert WebM to MP4 using system FFmpeg
 async function convertWebMToMP4(filePath) {
   return new Promise((resolve, reject) => {
+    if (!isFFmpegAvailable()) {
+      console.error("❌ FFmpeg is not installed! Please install it and set it in your system PATH.");
+      return reject("FFmpeg is missing. Please install FFmpeg and try again.");
+    }
 
     const outputFilePath = filePath.replace(".webm", ".mp4");
- 
-    ffmpeg(filePath)
-      .output(outputFilePath)
-      .outputOptions([
-        // `-c:v ${encoder}`,
-        "-c:v libx264",
-        "-preset ultrafast",
-        "-crf 17",
-        "-tune zerolatency",
-        "-threads 4",
-        "-movflags +faststart",
-      ])
-      .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
-      .on("error", (err) => {
-        console.error("❌ FFmpeg Conversion Error:", err);
-        reject(err);
-      })
-      .on("end", () => {
-        console.log("✅ Conversion Successful:", outputFilePath);
-        resolve(outputFilePath);
-      })
-      .run();
-  });
+    const encoder = getAvailableEncoders(); // Detect best encoder
+
+    console.log(`🎥 Starting conversion: ${filePath} → ${outputFilePath}`);
+    console.log(`🔥 Using Encoder: ${encoder}`);
+
+// Delay conversion to avoid file lock issues
+setTimeout(() => {
+  ffmpeg(filePath)
+    .output(outputFilePath)
+    .outputOptions([
+      "-c:v libx264",
+      "-preset ultrafast",
+      "-crf 17",
+      "-tune zerolatency",
+      "-threads 4",
+      "-movflags +faststart",
+    ])
+    .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
+    .on("error", (err) => {
+      console.error("❌ FFmpeg Conversion Error:", err);
+      reject(err);
+    })
+    .on("end", () => {
+      console.log("✅ Conversion Successful:", outputFilePath);
+      resolve(outputFilePath);
+    })
+    .run();
+}, 1000); // ✅ Delay FFmpeg conversion to avoid file-lock issues
+});
 }
 
-
-
-
-
-ipcMain.handle("get-sources", async () => {
-  return await desktopCapturer.getSources({ types: ["screen", "window"] });
-});
-
 ipcMain.handle("save-recording", async (_, buffer) => {
-  // implement: when user cancel save the location then only save rec into systems video folder
+  const defaultSavePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
+
   // Show Save Dialog
   const { filePath } = await dialog.showSaveDialog({
     title: "Save Recording",
-    defaultPath: path.join(
-      app.getPath("videos"),
-      `recording-${Date.now()}.webm`
-    ),
+    defaultPath: defaultSavePath,
     filters: [{ name: "WebM", extensions: ["webm"] }],
   });
 
-  let finalSavePath = filePath;
+  let finalSavePath = filePath || defaultSavePath; // Use default if user cancels
 
-  if (!filePath) {
-    // If user cancels, save automatically to Videos folder
-    finalSavePath = path.join(
-      app.getPath("videos"),
-      `recording-${Date.now()}.webm`
-    );
-    console.log(`User canceled. Auto-saving to: ${finalSavePath}`);
-  }
+  console.log(`📁 Saving Recording To: ${finalSavePath}`);
 
   // Save WebM file
-  fs.writeFileSync(finalSavePath, buffer);
-
   try {
-    // Convert WebM to MP4
-    const mp4FilePath = await convertWebMToMP4(finalSavePath);
-
-    // Delete original WebM file to keep only MP4
-    fs.unlinkSync(finalSavePath);
-    console.log("Deleted original WebM file:", finalSavePath);
-
-    return mp4FilePath;
+    fs.writeFileSync(finalSavePath, buffer);
+    console.log("✅ Recording saved:", finalSavePath);
   } catch (err) {
-    console.error("Failed to convert WebM to MP4:", err);
+    console.error("❌ Error saving file:", err);
+    return null;
+  }
+
+  // Convert WebM to MP4
+  try {
+    const mp4FilePath = await convertWebMToMP4(finalSavePath);
+    console.log("✅ MP4 File Path:", mp4FilePath);
+
+    // Delete original WebM file
+    fs.unlinkSync(finalSavePath);
+    console.log("🗑 Deleted WebM File:", finalSavePath);
+
+    return mp4FilePath; // Return final MP4 path
+  } catch (err) {
+    console.error("⚠️ FFmpeg Conversion Failed, Keeping WebM File:", err);
     return finalSavePath; // Return WebM if conversion fails
   }
 });

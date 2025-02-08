@@ -10,16 +10,18 @@
   },
   "build": {
     "appId": "com.alihussaindhuniya.screenrecorder",
-    "productName": "Screen Recorder by Ali Hussain Dhuniya",
+    "productName": "screenrecordingByAliHussainDhuniyaDhoonwa",
     "copyright": "© 2025 Ali Hussain Dhuniya",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "files": [
-      "node_modules/ffmpeg-static/**/*",
-      "main.js",
-      "preload.js",
+      "resources/**/*",
       "dist/**/*",
+      "!node_modules/.cache",
+      "!scripts",
+      "main.js",
       "renderer.js",
       "index.html",
       "assets/**",
@@ -27,12 +29,6 @@
       "alert.mp3",
       "style.css",
       "webcam.html"
-    ],
-    "extraResources": [
-      {
-        "from": "ffmpeg/bin/ffmpeg.exe",
-        "to": "ffmpeg/bin/ffmpeg.exe"
-      }
     ],
     "extraMetadata": {
       "main": "main.js"
@@ -48,26 +44,27 @@
     "linux": {
       "target": "AppImage",
       "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron-dialog": "^2.0.0",
-    "electron-is-dev": "^3.0.1",
-    "electron-reload": "^2.0.0-alpha.1",
-    "ffbinaries": "^1.1.6",
-    "ffmpeg": "^0.0.4",
-    "fluent-ffmpeg": "^2.1.3",
-    "fs": "^0.0.1-security",
-    "http": "^0.0.1-security",
-    "https": "^1.0.0",
-    "unzipper": "^0.12.3"
+    "electron-dialog": "2.0.0",
+    "electron-reload": "2.0.0-alpha.1",
+    "ffbinaries": "1.1.6",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "2.1.3",
+    "fs": "0.0.1-security"
   },
   "devDependencies": {
-    "electron": "^34.0.2",
-    "electron-builder": "^25.1.8"
+    "electron": "34.0.2",
+    "electron-builder": "25.1.8"
   },
   "packageManager": "yarn@4.6.0",
   "volta": {
