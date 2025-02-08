@@ -144,7 +144,7 @@ async function startRecording() {
     video: { width: 200, height: 200 },
   });
 
-  let countdown = 5;
+  let countdown = 2;
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const countdownDisplay = document.getElementById("countdown");
