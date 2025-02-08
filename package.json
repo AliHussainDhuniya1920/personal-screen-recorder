@@ -16,6 +16,13 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "extraResources": [
+    {
+      "from": "ffmpeg",
+      "to": "ffmpeg",
+      "filter": ["**/*"]
+    }
+  ],
     "files": [
       "resources/**/*",
       "dist/**/*",

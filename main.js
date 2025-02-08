@@ -142,17 +142,39 @@ const { execSync } = require("child_process");
 
 
 
-let ffmpegPath = "ffmpeg"; // Assume it's in the system PATH
+// ✅ Set FFmpeg Path to Local `ffmpeg/bin/ffmpeg.exe` Get from app-inside-no-need-to-set-env-variables
+// ✅ Determine FFmpeg path correctly
+let ffmpegPath;
 
-try {
-  // ✅ Find the full system path of FFmpeg
-  const detectedFFmpegPath = execSync("where ffmpeg").toString().trim(); // Windows (for Mac/Linux use `which ffmpeg`)
-  ffmpegPath = detectedFFmpegPath.split("\n")[0]; // Get first path in case multiple are listed
-
-  console.log("🚀 FFmpeg Found at:", ffmpegPath);
-} catch (error) {
-  console.error("❌ FFmpeg Not Found in System PATH. Please install FFmpeg.");
+// Check if running in production
+if (app.isPackaged) {
+  ffmpegPath = path.join(process.resourcesPath, "ffmpeg", "bin", "ffmpeg.exe"); // 🔹 Extracted location
+} else {
+  ffmpegPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe"); // 🔹 Dev mode
 }
+
+console.log("🔍 Checking FFmpeg Path:", ffmpegPath);
+
+// ✅ Ensure FFmpeg Exists
+if (!fs.existsSync(ffmpegPath)) {
+  console.error("❌ FFmpeg not found! Please make sure ffmpeg.exe is in the correct location.");
+} else {
+  console.log("🚀 Using local FFmpeg:", ffmpegPath);
+  ffmpeg.setFfmpegPath(ffmpegPath);
+}
+
+
+
+// this is for those who have ffmpeg.exe file installed on c folder c://ffmpeg/bin/ffmpeg.exe & user manually need to see environment variables
+// try {
+//   // ✅ Find the full system path of FFmpeg
+//   const detectedFFmpegPath = execSync("where ffmpeg").toString().trim(); // Windows (for Mac/Linux use `which ffmpeg`)
+//   ffmpegPath = detectedFFmpegPath.split("\n")[0]; // Get first path in case multiple are listed
+
+//   console.log("🚀 FFmpeg Found at:", ffmpegPath);
+// } catch (error) {
+//   console.error("❌ FFmpeg Not Found in System PATH. Please install FFmpeg.");
+// }
 
 // ✅ Set FFmpeg Path for Fluent-FFmpeg
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -184,42 +206,64 @@ function getAvailableEncoders() {
 // ✅ Function to convert WebM to MP4 using system FFmpeg
 async function convertWebMToMP4(filePath) {
   return new Promise((resolve, reject) => {
-    if (!isFFmpegAvailable()) {
-      console.error("❌ FFmpeg is not installed! Please install it and set it in your system PATH.");
-      return reject("FFmpeg is missing. Please install FFmpeg and try again.");
+    const outputFolder = app.getPath("videos"); // 🔹 Use Videos system folder
+
+    if (!fs.existsSync(outputFolder)) {
+      fs.mkdirSync(outputFolder, { recursive: true });
     }
 
-    const outputFilePath = filePath.replace(".webm", ".mp4");
-    const encoder = getAvailableEncoders(); // Detect best encoder
+    let outputFileName = path.basename(filePath).replace(/\.webm$/, ".mp4");
+    outputFileName = outputFileName.replace(/[^a-zA-Z0-9.-]/g, "_"); // Sanitize filename
+    let outputFilePath = path.resolve(outputFolder, outputFileName);
 
-    console.log(`🎥 Starting conversion: ${filePath} → ${outputFilePath}`);
-    console.log(`🔥 Using Encoder: ${encoder}`);
+    console.log(`🎥 Converting: ${filePath} → ${outputFilePath}`);
 
-// Delay conversion to avoid file lock issues
-setTimeout(() => {
-  ffmpeg(filePath)
-    .output(outputFilePath)
-    .outputOptions([
-      "-c:v libx264",
-      "-preset ultrafast",
-      "-crf 17",
-      "-tune zerolatency",
-      "-threads 4",
-      "-movflags +faststart",
-    ])
-    .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
-    .on("error", (err) => {
-      console.error("❌ FFmpeg Conversion Error:", err);
-      reject(err);
-    })
-    .on("end", () => {
-      console.log("✅ Conversion Successful:", outputFilePath);
-      resolve(outputFilePath);
-    })
-    .run();
-}, 1000); // ✅ Delay FFmpeg conversion to avoid file-lock issues
-});
+    if (!fs.existsSync(filePath)) {
+      console.error("❌ Input file does not exist:", filePath);
+      return reject("Input file missing.");
+    }
+
+    let encoder = getAvailableEncoders(); // Detect best encoder
+    console.log("🛠 Selected Encoder:", encoder);
+
+    function runFFmpeg(selectedEncoder) {
+      console.log(`🚀 Trying conversion with: ${selectedEncoder}`);
+
+      ffmpeg(filePath)
+        .output(outputFilePath)
+        .outputOptions([
+          "-y",
+          `-c:v ${selectedEncoder}`,
+          "-preset ultrafast",
+          "-crf 17",
+          "-tune zerolatency",
+          "-threads 4",
+          "-movflags +faststart",
+        ])
+        .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
+        .on("error", (err) => {
+          console.error(`❌ FFmpeg Error with ${selectedEncoder}:`, err.message);
+          
+          // If hardware encoder fails, fallback to libx264
+          if (selectedEncoder !== "libx264") {
+            console.log("⚠️ Falling back to libx264...");
+            runFFmpeg("libx264"); // Retry with libx264
+          } else {
+            reject(err); // If libx264 also fails, stop here
+          }
+        })
+        .on("end", () => {
+          console.log("✅ Conversion Successful:", outputFilePath);
+          resolve(outputFilePath);
+        })
+        .run();
+    }
+
+    // Start conversion with detected encoder, fallback if needed
+    runFFmpeg(encoder);
+  });
 }
+
 
 ipcMain.handle("save-recording", async (_, buffer) => {
   const defaultSavePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
