@@ -371,7 +371,7 @@ pauseButton.addEventListener("click", () => {
     }
 
     console.log("▶️ Recording resumed. Adjusted Time Left:", formatTime(timeRemaining));
-    startLiveCountdown(); // ✅ Restart countdown correctly
+    startLiveCountdown(lastUpdatedTime); // ✅ Restart countdown correctly
     pauseButton.innerText = "Pause Recording";
   }
 });
