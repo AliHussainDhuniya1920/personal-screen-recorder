@@ -62,9 +62,13 @@ function createWebcamWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize; // Get screen size
   const taskbarHeight = screen.getPrimaryDisplay().size.height - height; // Detect taskbar height
 
+
   const overlaySize = 250; // Webcam overlay size
   const xPos = width - overlaySize - 5; // Right-aligned
   const yPos = height - overlaySize - taskbarHeight + 145; // Positioned over system time
+  // console.log("📷 Webcam Overlay Position → X:", xPos, "Y:", yPos);
+
+
 
   webcamWindow = new BrowserWindow({
     width: overlaySize,
@@ -86,13 +90,24 @@ function createWebcamWindow() {
   });
 
   // ✅ Ensure it stays above the taskbar
-  webcamWindow.setAlwaysOnTop(true, "screen-saver");
+  // webcamWindow.setAlwaysOnTop(true, "screen-saver");
+  webcamWindow.setAlwaysOnTop(true, "pop-up"); // More aggressive than "screen-saver"
+
+  webcamWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); // Ensure it's visible across virtual desktops
+
   webcamWindow.setIgnoreMouseEvents(true, { forward: true }); // Allow clicks through window
   webcamWindow.loadFile("webcam.html");
 
   webcamWindow.on("closed", () => {
     webcamWindow = null; // Ensure window reference is cleared
   });
+
+  setInterval(() => {
+    if (webcamWindow) {
+      webcamWindow.setAlwaysOnTop(true, "pop-up");
+    }
+  }, 1000); // Keep forcing the window to stay on top every 500ms
+  
 }
 
 // Function to close the webcam window
