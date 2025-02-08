@@ -52,7 +52,13 @@ function startLiveCountdown() {
     timeRemaining = selectedDuration; // ✅ Set timeRemaining only if not already set
   }
 
-  clearInterval(liveCountdownInterval); // ✅ Prevent multiple intervals
+  // ✅ Clear any previous timer interval
+  if (liveCountdownInterval) {
+    clearInterval(liveCountdownInterval);
+    liveCountdownInterval = null; // ✅ Ensure it's fully cleared
+
+  }
+  // clearInterval(liveCountdownInterval); // ✅ Prevent multiple intervals
 
   lastUpdatedTime = Date.now(); // ✅ Track when the countdown started
 
@@ -146,9 +152,13 @@ function playSystemBeep() {
 document
   .getElementById("recording-time")
   .addEventListener("change", (event) => {
-    selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds
+    selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds(default-30-mins)
+   
+
+   
     document.getElementById("live-timer").innerText =
       formatTime(selectedDuration);
+
   });
 
 async function startRecording() {
@@ -157,7 +167,7 @@ async function startRecording() {
     video: { width: 200, height: 200 },
   });
 
-  let countdown = 2;
+  let countdown = 1;
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const countdownDisplay = document.getElementById("countdown");
