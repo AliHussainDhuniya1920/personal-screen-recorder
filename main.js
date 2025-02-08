@@ -8,9 +8,8 @@ const {
   ipcMain,
   dialog,
   screen,
-  globalShortcut
+  globalShortcut,
 } = require("electron");
-
 
 let mainWindow;
 let webcamWindow;
@@ -19,32 +18,26 @@ ipcMain.handle("get-sources", async () => {
   return await desktopCapturer.getSources({ types: ["screen", "window"] });
 });
 
-
 app.whenReady().then(() => {
-     // ✅ Register Global Shortcuts
- globalShortcut.register("CommandOrControl+Shift+S", () => {
-  console.log("🎥 Start Recording Shortcut Pressed");
-  mainWindow.webContents.send("start-recording");
-});
+  // ✅ Register Global Shortcuts
+  globalShortcut.register("CommandOrControl+Shift+S", () => {
+    console.log("🎥 Start Recording Shortcut Pressed");
+    mainWindow.webContents.send("start-recording");
+  });
 
-globalShortcut.register("CommandOrControl+Shift+X", () => {
-  console.log("🛑 Stop Recording Shortcut Pressed");
-  mainWindow.webContents.send("stop-recording");
-});
+  globalShortcut.register("CommandOrControl+Shift+X", () => {
+    console.log("🛑 Stop Recording Shortcut Pressed");
+    mainWindow.webContents.send("stop-recording");
+  });
 
+  globalShortcut.register("CommandOrControl+Shift+W", () => {
+    console.log("📷 Toggle Webcam Shortcut Pressed");
+    mainWindow.webContents.send("toggle-webcam");
+  });
 
-
-globalShortcut.register("CommandOrControl+Shift+W", () => {
-  console.log("📷 Toggle Webcam Shortcut Pressed");
-  mainWindow.webContents.send("toggle-webcam");
-});
-
-
-
-app.on("will-quit", () => {
-  globalShortcut.unregisterAll(); // ✅ Unregister shortcuts on app quit
-});
-
+  app.on("will-quit", () => {
+    globalShortcut.unregisterAll(); // ✅ Unregister shortcuts on app quit
+  });
 
   mainWindow = new BrowserWindow({
     width: 800,
@@ -54,21 +47,13 @@ app.on("will-quit", () => {
       contextIsolation: false, // Ensure proper IPC communication
       enableRemoteModule: true, // Needed if using remote module
     },
-  
   });
 
-
-
-  
   mainWindow.loadFile("index.html");
   mainWindow.on("closed", () => {
     closeWebcamWindow(); // ✅ Close webcam when main app closes
   });
 });
-
-
-
-
 
 // Function to create a floating webcam window
 function createWebcamWindow() {
@@ -77,10 +62,9 @@ function createWebcamWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize; // Get screen size
   const taskbarHeight = screen.getPrimaryDisplay().size.height - height; // Detect taskbar height
 
-  const overlaySize = 250 // Webcam overlay size
+  const overlaySize = 250; // Webcam overlay size
   const xPos = width - overlaySize - 5; // Right-aligned
   const yPos = height - overlaySize - taskbarHeight + 145; // Positioned over system time
-
 
   webcamWindow = new BrowserWindow({
     width: overlaySize,
@@ -101,8 +85,8 @@ function createWebcamWindow() {
     },
   });
 
-   // ✅ Ensure it stays above the taskbar
-   webcamWindow.setAlwaysOnTop(true, "screen-saver");
+  // ✅ Ensure it stays above the taskbar
+  webcamWindow.setAlwaysOnTop(true, "screen-saver");
   webcamWindow.setIgnoreMouseEvents(true, { forward: true }); // Allow clicks through window
   webcamWindow.loadFile("webcam.html");
 
@@ -134,13 +118,7 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
-
-
-
-
 const { execSync } = require("child_process");
-
-
 
 // ✅ Set FFmpeg Path to Local `ffmpeg/bin/ffmpeg.exe` Get from app-inside-no-need-to-set-env-variables
 // ✅ Determine FFmpeg path correctly
@@ -157,13 +135,13 @@ console.log("🔍 Checking FFmpeg Path:", ffmpegPath);
 
 // ✅ Ensure FFmpeg Exists
 if (!fs.existsSync(ffmpegPath)) {
-  console.error("❌ FFmpeg not found! Please make sure ffmpeg.exe is in the correct location.");
+  console.error(
+    "❌ FFmpeg not found! Please make sure ffmpeg.exe is in the correct location."
+  );
 } else {
   console.log("🚀 Using local FFmpeg:", ffmpegPath);
   ffmpeg.setFfmpegPath(ffmpegPath);
 }
-
-
 
 // this is for those who have ffmpeg.exe file installed on c folder c://ffmpeg/bin/ffmpeg.exe & user manually need to see environment variables
 // try {
@@ -178,7 +156,6 @@ if (!fs.existsSync(ffmpegPath)) {
 
 // ✅ Set FFmpeg Path for Fluent-FFmpeg
 ffmpeg.setFfmpegPath(ffmpegPath);
-
 
 // ✅ Function to check if FFmpeg is available
 function isFFmpegAvailable() {
@@ -203,6 +180,8 @@ function getAvailableEncoders() {
   return "libx264"; // Default CPU fallback
 }
 
+
+const os = require("os");
 // ✅ Function to convert WebM to MP4 using system FFmpeg
 async function convertWebMToMP4(filePath) {
   return new Promise((resolve, reject) => {
@@ -224,20 +203,38 @@ async function convertWebMToMP4(filePath) {
     function runFFmpeg(selectedEncoder) {
       console.log(`🚀 Trying conversion with: ${selectedEncoder}`);
 
+      
+
+ // 🔹 Detect user system CPU threads dynamically
+ const cpuThreads = os.cpus().length;
+ const optimalThreads = Math.max(2, Math.floor(cpuThreads / 2)); // Prevent setting 1 thread
+
+ console.log(`🖥️ Detected CPU Threads: ${cpuThreads} | Using ${optimalThreads} for FFmpeg`);
+
       ffmpeg(filePath)
         .output(outputFilePath)
         .outputOptions([
           "-y",
           `-c:v ${selectedEncoder}`,
           "-preset ultrafast",
+          // ultrafast → Maximum speed but slightly larger file size.
+          //        superfast → Still very fast, but smaller file size than ultrafast.
           "-crf 17",
           "-tune zerolatency",
-          "-threads 4",
+          // "-threads 4",
+          `-threads ${optimalThreads}`, // ✅ Use detected threads dynamically
           "-movflags +faststart",
+          "-c:a aac", // ✅ Convert audio to AAC (faster than default Opus)
+          "-b:a 192k", // ✅ Increase audio bitrate for better quality
+          "-af aresample=async=1", // ✅ Ensure audio & video are processed in parallel
         ])
-        .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
+        .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd} | 🚀 Using ${optimalThreads} Threads`))
+
         .on("error", (err) => {
-          console.error(`❌ FFmpeg Error with ${selectedEncoder}:`, err.message);
+          console.error(
+            `❌ FFmpeg Error with ${selectedEncoder}:`,
+            err.message
+          );
 
           if (selectedEncoder !== "libx264") {
             console.log("⚠️ Falling back to libx264...");
@@ -257,12 +254,13 @@ async function convertWebMToMP4(filePath) {
   });
 }
 
-
 // const desktopPath = app.getPath("desktop");
 
-
 ipcMain.handle("save-recording", async (_, buffer) => {
-  const defaultSavePath = path.join(app.getPath("videos"), `recording-${Date.now()}.webm`);
+  const defaultSavePath = path.join(
+    app.getPath("videos"),
+    `recording-${Date.now()}.webm`
+  );
 
   // Show Save Dialog
   const { filePath } = await dialog.showSaveDialog({
@@ -289,8 +287,7 @@ ipcMain.handle("save-recording", async (_, buffer) => {
     const mp4FilePath = await convertWebMToMP4(finalSavePath);
     console.log("✅ MP4 File Path:", mp4FilePath);
 
-
-    // If you don’t want to delete the WebM file after conversion, just remove this line in save-recording:fs.unlinkSync(finalSavePath); // 🛑 Remove this line if you want to keep the 
+    // If you don’t want to delete the WebM file after conversion, just remove this line in save-recording:fs.unlinkSync(finalSavePath); // 🛑 Remove this line if you want to keep the
     // Delete original WebM file
     fs.unlinkSync(finalSavePath);
     console.log("🗑 Deleted WebM File:", finalSavePath);
