@@ -323,33 +323,38 @@ async function actualStartRecording() {
 pauseButton.addEventListener("click", () => {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.pause();
-    isPaused = true; // Pause the timer
+    isPaused = true;
     clearInterval(liveCountdownInterval); // Stop the countdown
-    // ✅ Stop webcam stream when pausing
+
+    // ✅ Store when pause started
+    recordingPausedTime = Date.now();
+
+    // ✅ Stop webcam when pausing
     if (webcamStream) {
-      webcamStream.getTracks().forEach((track) => (track.enabled = false));
+      webcamStream.getTracks().forEach(track => (track.enabled = false));
     }
 
     console.log("⏸ Recording paused. Remaining Time:", timeRemaining);
     pauseButton.innerText = "Resume Recording";
   } else if (mediaRecorder && mediaRecorder.state === "paused") {
     mediaRecorder.resume();
-    isPaused = false; // Resume the timer
+    isPaused = false;
+
+    // ✅ Adjust `timeRemaining` based on pause duration
+    let pauseDuration = Date.now() - recordingPausedTime;
+    timeRemaining -= pauseDuration; // Reduce remaining time by the pause duration
 
     // ✅ Resume webcam when unpausing
     if (webcamStream) {
-      webcamStream.getTracks().forEach(track => track.enabled = true);
+      webcamStream.getTracks().forEach(track => (track.enabled = true));
     }
 
-
-    console.log(
-      "▶️ Recording resumed. Restarting timer with remaining time:",
-      timeRemaining
-    );
-    startLiveCountdown(); // Restart the countdown from remaining time
+    console.log("▶️ Recording resumed. Adjusted Time Left:", formatTime(timeRemaining));
+    startLiveCountdown(); // Restart countdown with updated time
     pauseButton.innerText = "Pause Recording";
   }
 });
+
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {

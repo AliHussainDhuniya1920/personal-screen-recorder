@@ -206,15 +206,10 @@ function getAvailableEncoders() {
 // ✅ Function to convert WebM to MP4 using system FFmpeg
 async function convertWebMToMP4(filePath) {
   return new Promise((resolve, reject) => {
-    const outputFolder = app.getPath("videos"); // 🔹 Use Videos system folder
-
-    if (!fs.existsSync(outputFolder)) {
-      fs.mkdirSync(outputFolder, { recursive: true });
-    }
-
+    const outputFolder = path.dirname(filePath); // 🔹 Save in the same location as WebM
     let outputFileName = path.basename(filePath).replace(/\.webm$/, ".mp4");
     outputFileName = outputFileName.replace(/[^a-zA-Z0-9.-]/g, "_"); // Sanitize filename
-    let outputFilePath = path.resolve(outputFolder, outputFileName);
+    let outputFilePath = path.resolve(outputFolder, outputFileName); // ✅ MP4 will be saved in the same location as WebM
 
     console.log(`🎥 Converting: ${filePath} → ${outputFilePath}`);
 
@@ -223,7 +218,7 @@ async function convertWebMToMP4(filePath) {
       return reject("Input file missing.");
     }
 
-    let encoder = getAvailableEncoders(); // Detect best encoder
+    let encoder = getAvailableEncoders();
     console.log("🛠 Selected Encoder:", encoder);
 
     function runFFmpeg(selectedEncoder) {
@@ -243,13 +238,12 @@ async function convertWebMToMP4(filePath) {
         .on("start", (cmd) => console.log(`⚡ FFmpeg Command: ${cmd}`))
         .on("error", (err) => {
           console.error(`❌ FFmpeg Error with ${selectedEncoder}:`, err.message);
-          
-          // If hardware encoder fails, fallback to libx264
+
           if (selectedEncoder !== "libx264") {
             console.log("⚠️ Falling back to libx264...");
-            runFFmpeg("libx264"); // Retry with libx264
+            runFFmpeg("libx264");
           } else {
-            reject(err); // If libx264 also fails, stop here
+            reject(err);
           }
         })
         .on("end", () => {
@@ -259,10 +253,12 @@ async function convertWebMToMP4(filePath) {
         .run();
     }
 
-    // Start conversion with detected encoder, fallback if needed
     runFFmpeg(encoder);
   });
 }
+
+
+// const desktopPath = app.getPath("desktop");
 
 
 ipcMain.handle("save-recording", async (_, buffer) => {
@@ -293,6 +289,8 @@ ipcMain.handle("save-recording", async (_, buffer) => {
     const mp4FilePath = await convertWebMToMP4(finalSavePath);
     console.log("✅ MP4 File Path:", mp4FilePath);
 
+
+    // If you don’t want to delete the WebM file after conversion, just remove this line in save-recording:fs.unlinkSync(finalSavePath); // 🛑 Remove this line if you want to keep the 
     // Delete original WebM file
     fs.unlinkSync(finalSavePath);
     console.log("🗑 Deleted WebM File:", finalSavePath);
