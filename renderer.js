@@ -8,11 +8,14 @@ let recordedChunks = [];
 let webcamStream;
 let stopTimer; // Timer to automatically stop recording
 let beepInterval;
-let liveCountdownInterval;
 let selectedDuration = 30 * 60 * 1000; // Default to 30 minutes
 const pauseButton = document.getElementById("pause");
-let isPaused = false; // Track pause state
-let timeRemaining; // Keep track of remaining time
+let liveCountdownInterval = null;
+let isPaused = false;
+let recordingPausedTime = null;
+let timeRemaining = null;
+let lastUpdatedTime = null; // Tracks the last time update before pausing
+
 
 
 window.onload = () => {
@@ -43,44 +46,60 @@ function formatTime(ms) {
 
 // Function to start live countdown timer
 function startLiveCountdown() {
-  console.log("⏳ Timer started. Remaining Time:", timeRemaining);
+  console.log("⏳ Timer started. Remaining Time:", formatTime(timeRemaining));
 
-  if (!timeRemaining || timeRemaining <= 0) {
-    timeRemaining = selectedDuration; // ✅ Reset timeRemaining if not set
+  if (timeRemaining === null || timeRemaining <= 0) {
+    timeRemaining = selectedDuration; // ✅ Set timeRemaining only if not already set
   }
 
-  clearInterval(liveCountdownInterval); // ✅ Clear previous countdown to avoid conflicts
+  // ✅ Clear any previous timer interval
+  if (liveCountdownInterval) {
+    clearInterval(liveCountdownInterval);
+    liveCountdownInterval = null; // ✅ Ensure it's fully cleared
+
+  }
+  // clearInterval(liveCountdownInterval); // ✅ Prevent multiple intervals
+
+  lastUpdatedTime = Date.now(); // ✅ Track when the countdown started
 
   liveCountdownInterval = setInterval(() => {
     if (!isPaused) {
-      timeRemaining -= 1000;
+      const now = Date.now();
+      const elapsed = now - lastUpdatedTime; // ✅ Calculate actual elapsed time
+      timeRemaining -= elapsed; // ✅ Reduce time accurately
+      lastUpdatedTime = now; // ✅ Update last time marker
+
+
+      // ✅ Ensure timeRemaining does not go negative
+      if (timeRemaining < 0) {
+        timeRemaining = 0;
+      }
+
+
       document.getElementById(
         "live-timer"
       ).innerText = `Time Left: ${formatTime(timeRemaining)}`;
-      console.log("⏳ Timer running. Remaining Time:", timeRemaining);
+      console.log("⏳ Timer running. Remaining Time:", formatTime(timeRemaining));
     }
 
-      if (timeRemaining <= 0) {
-        clearInterval(liveCountdownInterval);
-        document.getElementById("live-timer").innerText = "Time Left: 00:00";
+    if (timeRemaining <= 0) {
+      clearInterval(liveCountdownInterval);
+      document.getElementById("live-timer").innerText = "Time Left: 00:00";
+      console.log("🛑 Timer reached 00:00. Stopping recording...");
 
-        console.log("🛑 Timer reached 00:00. Stopping recording...");
-
-     
-
-       // ✅ Stop recording immediately without waiting 1 extra second
-       if (mediaRecorder && mediaRecorder.state === "recording") {
+      // ✅ Stop recording immediately
+      if (mediaRecorder && mediaRecorder.state === "recording") {
         console.log("🎥 Stopping MediaRecorder...");
         mediaRecorder.stop();
       }
-       // ✅ Then, play the alert sound AFTER stopping the recording
-       setTimeout(() => {
-        playBeepSound(); // ✅ Alert sound is now separate and won't interfere with timer
+
+      // ✅ Play alert sound AFTER stopping the recording
+      setTimeout(() => {
+        playBeepSound();
       }, 500);
     }
-  }, 1000);
+  }, 100);
 }
-
 
 // Function to play a beep sound for 3 seconds
 function playBeepSound() {
@@ -133,9 +152,13 @@ function playSystemBeep() {
 document
   .getElementById("recording-time")
   .addEventListener("change", (event) => {
-    selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds
+    selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds(default-30-mins)
+   
+
+   
     document.getElementById("live-timer").innerText =
       formatTime(selectedDuration);
+
   });
 
 async function startRecording() {
@@ -144,7 +167,7 @@ async function startRecording() {
     video: { width: 200, height: 200 },
   });
 
-  let countdown = 2;
+  let countdown = 1;
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const countdownDisplay = document.getElementById("countdown");
@@ -319,30 +342,28 @@ async function actualStartRecording() {
   }, selectedDuration);
 }
 
-// Pause/Resume Button Logic
+// ✅ Pause/Resume Button Logic
 pauseButton.addEventListener("click", () => {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.pause();
     isPaused = true;
-    clearInterval(liveCountdownInterval); // Stop the countdown
-
-    // ✅ Store when pause started
-    recordingPausedTime = Date.now();
+    clearInterval(liveCountdownInterval); // ✅ Pause countdown
+    recordingPausedTime = Date.now(); // ✅ Store pause time
 
     // ✅ Stop webcam when pausing
     if (webcamStream) {
       webcamStream.getTracks().forEach(track => (track.enabled = false));
     }
 
-    console.log("⏸ Recording paused. Remaining Time:", timeRemaining);
+    console.log("⏸ Recording paused. Remaining Time:", formatTime(timeRemaining));
     pauseButton.innerText = "Resume Recording";
   } else if (mediaRecorder && mediaRecorder.state === "paused") {
     mediaRecorder.resume();
     isPaused = false;
 
-    // ✅ Adjust `timeRemaining` based on pause duration
+    // ✅ Adjust timeRemaining based on pause duration
     let pauseDuration = Date.now() - recordingPausedTime;
-    timeRemaining -= pauseDuration; // Reduce remaining time by the pause duration
+    lastUpdatedTime += pauseDuration; // ✅ Adjust last update time instead of modifying `timeRemaining`
 
     // ✅ Resume webcam when unpausing
     if (webcamStream) {
@@ -350,7 +371,7 @@ pauseButton.addEventListener("click", () => {
     }
 
     console.log("▶️ Recording resumed. Adjusted Time Left:", formatTime(timeRemaining));
-    startLiveCountdown(); // Restart countdown with updated time
+    startLiveCountdown(lastUpdatedTime); // ✅ Restart countdown correctly
     pauseButton.innerText = "Pause Recording";
   }
 });

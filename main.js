@@ -90,8 +90,8 @@ function createWebcamWindow() {
   });
 
   // ✅ Ensure it stays above the taskbar
-  // webcamWindow.setAlwaysOnTop(true, "screen-saver");
-  webcamWindow.setAlwaysOnTop(true, "pop-up"); // More aggressive than "screen-saver"
+  webcamWindow.setAlwaysOnTop(true, "screen-saver");
+  // webcamWindow.setAlwaysOnTop(true, "pop-up"); // More aggressive than "screen-saver"
 
   webcamWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); // Ensure it's visible across virtual desktops
 
@@ -104,7 +104,7 @@ function createWebcamWindow() {
 
   setInterval(() => {
     if (webcamWindow) {
-      webcamWindow.setAlwaysOnTop(true, "pop-up");
+      webcamWindow.setAlwaysOnTop(true, "screen-saver"); // Keep forcing the window to stay on top
     }
   }, 1000); // Keep forcing the window to stay on top every 500ms
   
