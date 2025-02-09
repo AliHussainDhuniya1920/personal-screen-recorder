@@ -216,9 +216,31 @@ async function actualStartRecording() {
       mandatory: {
         chromeMediaSource: "desktop",
         chromeMediaSourceId: sources[0].id,
+
+        minWidth: 1280, // ✅ Minimum width
+        minHeight: 720, // ✅ Minimum height
+        maxWidth: 1920, // ✅ Maximum width (Full HD)
+        maxHeight: 1080, // ✅ Maximum height
+        minFrameRate: 30, // ✅ Minimum FPS
+        maxFrameRate: 60, // ✅ Maximum FPS
+  
       },
     },
   });
+
+  // ✅ Log actual screen recording settings
+const screenVideoTrack = screenStream.getVideoTracks()[0];
+const screenSettings = screenVideoTrack.getSettings();
+console.log(`🎥 Screen Resolution: ${screenSettings.width}x${screenSettings.height}, FPS: ${screenSettings.frameRate}`);
+
+
+// ✅ Log actual webcam recording settings
+if (webcamStream) {
+  const webcamVideoTrack = webcamStream.getVideoTracks()[0];
+  const webcamSettings = webcamVideoTrack.getSettings();
+  console.log(`📷 Webcam Resolution: ${webcamSettings.width}x${webcamSettings.height}, FPS: ${webcamSettings.frameRate}`);
+}
+
 
   const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
