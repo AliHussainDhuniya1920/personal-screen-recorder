@@ -1,8 +1,6 @@
 const { ipcRenderer } = require("electron");
 const path = require("path");
 
-
-
 let mediaRecorder;
 let recordedChunks = [];
 let webcamStream;
@@ -15,8 +13,6 @@ let isPaused = false;
 let recordingPausedTime = null;
 let timeRemaining = null;
 let lastUpdatedTime = null; // Tracks the last time update before pausing
-
-
 
 window.onload = () => {
   document.getElementById("stop").disabled = true;
@@ -56,7 +52,6 @@ function startLiveCountdown() {
   if (liveCountdownInterval) {
     clearInterval(liveCountdownInterval);
     liveCountdownInterval = null; // ✅ Ensure it's fully cleared
-
   }
   // clearInterval(liveCountdownInterval); // ✅ Prevent multiple intervals
 
@@ -69,17 +64,18 @@ function startLiveCountdown() {
       timeRemaining -= elapsed; // ✅ Reduce time accurately
       lastUpdatedTime = now; // ✅ Update last time marker
 
-
       // ✅ Ensure timeRemaining does not go negative
       if (timeRemaining < 0) {
         timeRemaining = 0;
       }
 
-
       document.getElementById(
         "live-timer"
       ).innerText = `Time Left: ${formatTime(timeRemaining)}`;
-      console.log("⏳ Timer running. Remaining Time:", formatTime(timeRemaining));
+      console.log(
+        "⏳ Timer running. Remaining Time:",
+        formatTime(timeRemaining)
+      );
     }
 
     if (timeRemaining <= 0) {
@@ -110,7 +106,7 @@ function playBeepSound() {
   let beepCount = 0; // Counter to stop after 3 beeps
 
   beepInterval = setInterval(() => {
-    if (beepCount >= 3) { 
+    if (beepCount >= 3) {
       clearInterval(beepInterval); // ✅ Stop after 3 beeps
       console.log("✅ Beep sound stopped after 3 seconds.");
       return;
@@ -119,7 +115,9 @@ function playBeepSound() {
     beepAudio.currentTime = 0; // Reset to start
     beepAudio
       .play()
-      .then(() => console.log(`🔊 Playing custom beep sound (${beepCount + 1}/3)`))
+      .then(() =>
+        console.log(`🔊 Playing custom beep sound (${beepCount + 1}/3)`)
+      )
       .catch((err) => {
         console.error("❌ Custom beep sound failed, using system beep:", err);
         playSystemBeep(); // ✅ If custom beep fails, fallback to system beep
@@ -129,11 +127,9 @@ function playBeepSound() {
   }, 1000);
 }
 
-
-  // setTimeout(() => {
-  //   clearInterval(beepInterval);
-  // }, 3000); // Stop beeping after 3 seconds
-
+// setTimeout(() => {
+//   clearInterval(beepInterval);
+// }, 3000); // Stop beeping after 3 seconds
 
 // Function to play the default system beep sound
 function playSystemBeep() {
@@ -153,12 +149,9 @@ document
   .getElementById("recording-time")
   .addEventListener("change", (event) => {
     selectedDuration = parseInt(event.target.value) * 60 * 500; // Convert minutes to milliseconds(default-30-mins)
-   
 
-   
     document.getElementById("live-timer").innerText =
       formatTime(selectedDuration);
-
   });
 
 async function startRecording() {
@@ -207,40 +200,52 @@ async function startRecording() {
   }, 1000);
 }
 
+
+
 async function actualStartRecording() {
   const sources = await ipcRenderer.invoke("get-sources");
+
+  // 🎯 Get user-selected FPS (default: 30 FPS)
+  const selectedFPS = parseInt(document.getElementById("fps").value, 10) || 30;
+
+ // ✅ Get screen resolution from `window.screen`
+ const screenWidth = window.screen.width;
+ const screenHeight = window.screen.height;
+
+ console.log(`🎥 Using Screen Resolution: ${screenWidth}x${screenHeight}, FPS: ${selectedFPS}`);
+
 
   const screenStream = await navigator.mediaDevices.getUserMedia({
     audio: { mandatory: { chromeMediaSource: "desktop" } },
     video: {
       mandatory: {
-        chromeMediaSource: "desktop",
+         chromeMediaSource: "desktop",
         chromeMediaSourceId: sources[0].id,
-
-        minWidth: 1280, // ✅ Minimum width
-        minHeight: 720, // ✅ Minimum height
-        maxWidth: 1920, // ✅ Maximum width (Full HD)
-        maxHeight: 1080, // ✅ Maximum height
-        minFrameRate: 30, // ✅ Minimum FPS
-        maxFrameRate: 60, // ✅ Maximum FPS
-  
+        minWidth: 1280,    // ✅ Minimum width for recording
+        minHeight: 720,   // ✅ Minimum height for recording
+        maxWidth: 1920,   // ✅ Maximum width (Full HD) for recording
+        maxHeight: 1080,  // ✅ Maximum height (Full HD) for recording
+        minFrameRate: selectedFPS, // ✅ Minimum FPS (user-defined)
+        maxFrameRate: selectedFPS, // ✅ Maximum FPS (user-defined)
       },
     },
   });
 
   // ✅ Log actual screen recording settings
-const screenVideoTrack = screenStream.getVideoTracks()[0];
-const screenSettings = screenVideoTrack.getSettings();
-console.log(`🎥 Screen Resolution: ${screenSettings.width}x${screenSettings.height}, FPS: ${screenSettings.frameRate}`);
+  const screenVideoTrack = screenStream.getVideoTracks()[0];
+  const screenSettings = screenVideoTrack.getSettings();
+  console.log(
+    `🎥 Screen Resolution: ${screenSettings.width}x${screenSettings.height}, FPS: ${screenSettings.frameRate}`
+  );
 
-
-// ✅ Log actual webcam recording settings
-if (webcamStream) {
-  const webcamVideoTrack = webcamStream.getVideoTracks()[0];
-  const webcamSettings = webcamVideoTrack.getSettings();
-  console.log(`📷 Webcam Resolution: ${webcamSettings.width}x${webcamSettings.height}, FPS: ${webcamSettings.frameRate}`);
-}
-
+  // ✅ Log actual webcam recording settings
+  if (webcamStream) {
+    const webcamVideoTrack = webcamStream.getVideoTracks()[0];
+    const webcamSettings = webcamVideoTrack.getSettings();
+    console.log(
+      `📷 Webcam Resolution: ${webcamSettings.width}x${webcamSettings.height}, FPS: ${webcamSettings.frameRate}`
+    );
+  }
 
   const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -374,10 +379,13 @@ pauseButton.addEventListener("click", () => {
 
     // ✅ Stop webcam when pausing
     if (webcamStream) {
-      webcamStream.getTracks().forEach(track => (track.enabled = false));
+      webcamStream.getTracks().forEach((track) => (track.enabled = false));
     }
 
-    console.log("⏸ Recording paused. Remaining Time:", formatTime(timeRemaining));
+    console.log(
+      "⏸ Recording paused. Remaining Time:",
+      formatTime(timeRemaining)
+    );
     pauseButton.innerText = "Resume Recording";
   } else if (mediaRecorder && mediaRecorder.state === "paused") {
     mediaRecorder.resume();
@@ -389,15 +397,17 @@ pauseButton.addEventListener("click", () => {
 
     // ✅ Resume webcam when unpausing
     if (webcamStream) {
-      webcamStream.getTracks().forEach(track => (track.enabled = true));
+      webcamStream.getTracks().forEach((track) => (track.enabled = true));
     }
 
-    console.log("▶️ Recording resumed. Adjusted Time Left:", formatTime(timeRemaining));
+    console.log(
+      "▶️ Recording resumed. Adjusted Time Left:",
+      formatTime(timeRemaining)
+    );
     startLiveCountdown(); // ✅ Restart countdown correctly
     pauseButton.innerText = "Pause Recording";
   }
 });
-
 
 // Function to show a system notification
 function showRecordingStoppedNotification() {
@@ -438,10 +448,8 @@ document.getElementById("stop").addEventListener("click", () => {
 const toggleWebcamButton = document.getElementById("toggle-webcam");
 let isWebcamEnabled = true; // ✅ Default: Enabled
 
-
 // Set initial button text
 toggleWebcamButton.innerText = "Disable Webcam";
-
 
 toggleWebcamButton.addEventListener("click", () => {
   if (isWebcamEnabled) {
@@ -457,11 +465,14 @@ toggleWebcamButton.addEventListener("click", () => {
 // ✅ Function to Start Webcam
 function startWebcam() {
   ipcRenderer.send("start-webcam");
-  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-    webcamStream = stream; // Store webcam stream
-  }).catch((error) => {
-    console.error("❌ Failed to start webcam:", error);
-  });
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then((stream) => {
+      webcamStream = stream; // Store webcam stream
+    })
+    .catch((error) => {
+      console.error("❌ Failed to start webcam:", error);
+    });
 }
 
 // ✅ Function to Stop Webcam Properly
@@ -469,11 +480,10 @@ function stopWebcam() {
   ipcRenderer.send("stop-webcam");
 
   if (webcamStream) {
-    webcamStream.getTracks().forEach(track => track.stop()); // ✅ Turn off webcam
+    webcamStream.getTracks().forEach((track) => track.stop()); // ✅ Turn off webcam
     webcamStream = null; // Clear stream reference
   }
 }
-
 
 // mic default on:
 
@@ -481,42 +491,40 @@ const toggleMicButton = document.getElementById("toggle-mic");
 let isMicEnabled = true; // Default: Enabled
 
 toggleMicButton.addEventListener("click", () => {
-    if (mediaRecorder) {
-        mediaRecorder.stream.getAudioTracks().forEach(track => {
-            track.enabled = !track.enabled; // Toggle mic
-        });
+  if (mediaRecorder) {
+    mediaRecorder.stream.getAudioTracks().forEach((track) => {
+      track.enabled = !track.enabled; // Toggle mic
+    });
 
-        isMicEnabled = !isMicEnabled;
-        toggleMicButton.innerText = isMicEnabled ? "Disable Microphone" : "Enable Microphone";
-    }
+    isMicEnabled = !isMicEnabled;
+    toggleMicButton.innerText = isMicEnabled
+      ? "Disable Microphone"
+      : "Enable Microphone";
+  }
 });
-
 
 // shortcut keys
 ipcRenderer.on("start-recording", () => {
-    console.log("🎥 Start Recording Triggered from Shortcut");
-    startRecording();
+  console.log("🎥 Start Recording Triggered from Shortcut");
+  startRecording();
 });
 
 ipcRenderer.on("stop-recording", () => {
-    console.log("🛑 Stop Recording Triggered from Shortcut");
-    if (mediaRecorder) {
-        mediaRecorder.stop();
-    }
+  console.log("🛑 Stop Recording Triggered from Shortcut");
+  if (mediaRecorder) {
+    mediaRecorder.stop();
+  }
 });
-
-
 
 ipcRenderer.on("toggle-webcam", () => {
-    console.log("📷 Toggle Webcam Triggered from Shortcut");
-    const toggleWebcamButton = document.getElementById("toggle-webcam");
-    toggleWebcamButton.click(); // ✅ Simulate button click
+  console.log("📷 Toggle Webcam Triggered from Shortcut");
+  const toggleWebcamButton = document.getElementById("toggle-webcam");
+  toggleWebcamButton.click(); // ✅ Simulate button click
 });
-
 
 // keep below code commented because by mistake if we press shortcut key then it will pause the recording without knowing  so do it manually
 // document.addEventListener("DOMContentLoaded", () => {
-  
+
 //   ipcRenderer.on("pause", () => {
 //     console.log("⏸️ Pause/Resume Recording Triggered from Shortcut");
 //     console.log("mediaRecorder:", mediaRecorder); // Debugging
@@ -533,9 +541,8 @@ ipcRenderer.on("toggle-webcam", () => {
 //     }
 //   });
 
+// keep below code disable: mic because if we press accidently shortcut key then it will disable the mic so do it manually
 
-  // keep below code disable: mic because if we press accidently shortcut key then it will disable the mic so do it manually
-  
 //   let micStream = null; // Declare globally
 //   navigator.mediaDevices.getUserMedia({ audio: true })
 //     .then(stream => {
@@ -554,6 +561,5 @@ ipcRenderer.on("toggle-webcam", () => {
 //       console.error("⚠️ micStream is undefined");
 //     }
 //   });
-  
-// });
 
+// });
